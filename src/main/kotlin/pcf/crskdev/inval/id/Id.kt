@@ -1,6 +1,3 @@
-import io.kotest.core.spec.style.StringSpec
-import io.kotest.matchers.shouldBe
-
 /*
  * MIT License
  *
@@ -24,9 +21,46 @@ import io.kotest.matchers.shouldBe
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-class TestTestCase : StringSpec({
 
-    "fails" {
-        Test().ok() shouldBe true
+@file:Suppress("unused")
+
+package pcf.crskdev.inval.id
+
+/**
+ * Id of a input field.
+ *
+ * @author Cristian Pela
+ * @since 1.0
+ */
+sealed class Id {
+
+    /**
+     * None
+     *
+     * @constructor Create empty None
+     */
+    class None private constructor() : Id() {
+
+        companion object {
+            internal val Instance = None()
+        }
+
+        override fun toString(): String = "#<no-id>"
     }
-})
+
+    /**
+     * Of
+     *
+     * @property value
+     * @constructor Create empty Of
+     */
+    data class Of(val value: Any) : Id() {
+        override fun toString(): String = value.toString()
+    }
+}
+
+/**
+ * Any object to id.
+ *
+ */
+fun Any.toId() = Id.Of(this)

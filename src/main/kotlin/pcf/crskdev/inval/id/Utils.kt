@@ -1,4 +1,4 @@
-/*
+package pcf.crskdev.inval.id/*
  * MIT License
  *
  * Copyright (c) 2021. Pela Cristian
@@ -22,7 +22,18 @@
  * SOFTWARE.
  */
 
-class Test {
-
-    fun ok() = true
-}
+/**
+ * [Result] flat map implementation.
+ *
+ * @param T In type
+ * @param R Out type
+ * @param block
+ * @receiver
+ * @return
+ */
+internal inline fun <T, R> Result<T>.flatMap(block: (T) -> Result<R>): Result<R> =
+    if (this.isSuccess) {
+        block(this.getOrNull()!!)
+    } else {
+        Result.failure(this.exceptionOrNull()!!)
+    }
