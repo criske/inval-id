@@ -1,6 +1,3 @@
-import io.kotest.core.spec.style.StringSpec
-import io.kotest.matchers.shouldBe
-
 /*
  * MIT License
  *
@@ -24,9 +21,8 @@ import io.kotest.matchers.shouldBe
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-class Test : StringSpec({
 
-    "fails" {
-        true shouldBe true
-    }
-})
+class Test {
+
+    fun ok() = true
+}

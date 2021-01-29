@@ -2,7 +2,6 @@ plugins {
     id 'java'
     id 'java-library'
     id 'org.jetbrains.kotlin.jvm' version '1.4.10'
-
     id 'jacoco'
     id 'org.barfuin.gradle.jacocolog' version '1.2.3'
 }
@@ -33,6 +32,7 @@ jacocoTestReport {
         xml.enabled true
         csv.enabled false
         html.destination file("${buildDir}/jacocoHtml")
+        xml.destination file("${buildDir}/jacocoXml")
     }
     afterEvaluate {
         getClassDirectories().setFrom(classDirectories.files.collect {
