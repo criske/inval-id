@@ -35,8 +35,10 @@ jobs:
       
       # Codecov
       - name: Codecov
-        uses: codecov/codecov-action@v2
+        uses: codecov/codecov-action@v1.2.1
         with:
-         token: ${{ secrets.CODECOV_TOKEN }}
-         fetch-depth: '0'
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: true
+          path_to_write_report: ./coverage/codecov_report.txt
+          verbose: true
 
