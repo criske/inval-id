@@ -32,7 +32,6 @@ jacocoTestReport {
         xml.enabled true
         csv.enabled false
         html.destination file("${buildDir}/jacocoHtml")
-        xml.destination file("${buildDir}/jacocoXml")
     }
     afterEvaluate {
         getClassDirectories().setFrom(classDirectories.files.collect {
