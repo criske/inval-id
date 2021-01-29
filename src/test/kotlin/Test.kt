@@ -27,6 +27,6 @@ import io.kotest.matchers.shouldBe
 class Test : StringSpec({
 
     "fails" {
-        true shouldBe false
+        true shouldBe true
     }
 })
