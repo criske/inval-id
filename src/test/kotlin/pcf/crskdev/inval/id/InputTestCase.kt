@@ -177,4 +177,23 @@ internal class InputTestCase : StringSpec({
             .first()
             .message shouldBe "Custom invalid message"
     }
+
+    "should use errorOnFail from ValidationScope" {
+        val rule = Validation<String> {
+            errorOnFail("Is empty") { input -> input.isEmpty() }
+        }
+        val exception = Input(0.toId(), "", rule)()
+            .exceptionOrNull()!! as ValidationException
+        exception
+            .errors
+            .first()
+            .message shouldBe "Is empty"
+    }
+
+    "should not use errorOnFail from ValidationScope" {
+        val rule = Validation<String> {
+            errorOnFail("Is empty") { input -> input.isEmpty() }
+        }
+        Input(0.toId(), "foo", rule)().isSuccess shouldBe true
+    }
 })

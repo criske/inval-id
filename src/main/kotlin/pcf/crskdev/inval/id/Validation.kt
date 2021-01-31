@@ -72,8 +72,8 @@ typealias Validation<T> = (T, ValidationExceptionProvider) -> Result<T>
  * @return Validation rule.
  */
 @Suppress("FunctionName")
-fun <T> Validation(block: ValidationScope.(T) -> Unit): Validation<T> = { input, error ->
-    val scope = ValidationScope(error).apply { block(input) }
+fun <T> Validation(block: ValidationScope<T>.(T) -> Unit): Validation<T> = { input, error ->
+    val scope = ValidationScope(input, error).apply { block(input) }
     if (scope.builder.isEmpty) {
         Result.success(input)
     } else {
@@ -87,7 +87,8 @@ fun <T> Validation(block: ValidationScope.(T) -> Unit): Validation<T> = { input,
  * @property provider ValidationExceptionProvider
  * @constructor Create empty Validation scope
  */
-class ValidationScope internal constructor(
+class ValidationScope<T> internal constructor(
+    private val input: T,
     private val provider: ValidationExceptionProvider
 ) {
 
@@ -100,6 +101,24 @@ class ValidationScope internal constructor(
      */
     fun error(message: CharSequence) {
         builder.add(provider(message))
+    }
+
+    /**
+     * Add message error to the final field ValidationException when predicate fails.
+     * Shortcut for:
+     * ```
+     * if(input fails) {
+     *  error("Invalid input")
+     * }
+     * ```
+     * @param message CharSequence.
+     * @param predicate Predicate applied to input T.
+     * @receiver
+     */
+    fun errorOnFail(message: CharSequence, predicate: (T) -> Boolean) {
+        if (predicate(this.input)) {
+            builder.add(provider(message))
+        }
     }
 }
 
