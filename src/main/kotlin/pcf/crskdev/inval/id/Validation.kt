@@ -101,6 +101,19 @@ class ValidationScope internal constructor(
     fun error(message: CharSequence) {
         builder.add(provider(message))
     }
+
+    /**
+     * Add message error to the final field ValidationException when predicate fails.
+     *
+     * @param message CharSequence.
+     * @param predicate Predicate.
+     * @receiver
+     */
+    fun errorOnFail(message: CharSequence, predicate: () -> Boolean) {
+        if (predicate()) {
+            builder.add(provider(message))
+        }
+    }
 }
 
 /**
