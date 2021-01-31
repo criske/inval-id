@@ -149,4 +149,18 @@ internal class InputTestCase : StringSpec({
             (this.exceptionOrNull() as ValidationException).errors.size shouldBe 2
         }
     }
+
+    "should use regex validation" {
+        var email = RegexValidation("^(.+)@(.+)$")("Not a valid email.")
+        Input(0.toId(), "foo", email)().isFailure shouldBe true
+        Input(0.toId(), "foo@email.com", email)().isSuccess shouldBe true
+
+        email = RegexValidation("^(.+)@(.+)$", setOf(RegexOption.MULTILINE))("Not a valid email.")
+        Input(0.toId(), "foo", email)().isFailure shouldBe true
+        Input(0.toId(), "foo@email.com", email)().isSuccess shouldBe true
+
+        email = RegexValidation("^(.+)@(.+)$", setOf(RegexOption.MULTILINE, RegexOption.COMMENTS))("Not a valid email.")
+        Input(0.toId(), "foo", email)().isFailure shouldBe true
+        Input(0.toId(), "foo@email.com", email)().isSuccess shouldBe true
+    }
 })

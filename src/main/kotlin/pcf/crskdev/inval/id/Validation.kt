@@ -25,6 +25,7 @@
 @file:Suppress("unused")
 
 package pcf.crskdev.inval.id
+
 /*
 * MIT License
 *
@@ -99,5 +100,31 @@ class ValidationScope internal constructor(
      */
     fun error(message: String) {
         builder.add(provider(message))
+    }
+}
+
+/**
+ * Creates a regex based validation.
+ * ```
+ * val email: Validation<String> = RegexValidation("^(.+)@(.+)$")("Not a valid email.")
+ * ```
+ * @param expression Regex expression.
+ * @param options Regex options.
+ * @return Custom message Validation.
+ */
+@Suppress("FunctionName")
+fun RegexValidation(expression: String, options: Set<RegexOption> = emptySet()): (String) -> Validation<CharSequence> {
+    val regex = when {
+        options.isEmpty() -> expression.toRegex()
+        options.size == 1 -> expression.toRegex(options.first())
+        else -> expression.toRegex(options)
+    }
+    return { message ->
+        val validation: Validation<CharSequence> = Validation {
+            if (!regex.matches(it)) {
+                error(message)
+            }
+        }
+        validation
     }
 }
