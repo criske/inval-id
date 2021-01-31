@@ -180,7 +180,7 @@ internal class InputTestCase : StringSpec({
 
     "should use errorOnFail from ValidationScope" {
         val rule = Validation<String> {
-            errorOnFail("Is empty") { it.isEmpty() }
+            errorOnFail("Is empty") { input -> input.isEmpty() }
         }
         val exception = Input(0.toId(), "", rule)()
             .exceptionOrNull()!! as ValidationException
