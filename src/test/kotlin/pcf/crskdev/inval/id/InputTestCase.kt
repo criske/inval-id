@@ -189,4 +189,11 @@ internal class InputTestCase : StringSpec({
             .first()
             .message shouldBe "Is empty"
     }
+
+    "should not use errorOnFail from ValidationScope" {
+        val rule = Validation<String> {
+            errorOnFail("Is empty") { input -> input.isEmpty() }
+        }
+        Input(0.toId(), "foo", rule)().isSuccess shouldBe true
+    }
 })
