@@ -36,20 +36,20 @@ class ValidationException internal constructor(val errors: List<Field>) : Runtim
      * Field that carries the validation error.
      *
      * @property id [Id]
-     * @property message String
+     * @property message CharSequence
      * @constructor Create empty Field
      */
-    data class Field internal constructor(val id: Id, val message: String)
+    data class Field internal constructor(val id: Id, val message: CharSequence)
 
     companion object {
         /**
          * Creates a ValidationException with a single [Field] error.
          *
          * @param id [Id]
-         * @param message Message
+         * @param message CharSequence
          * @return ValidationException
          */
-        internal fun of(id: Id, message: String): ValidationException = ValidationException(
+        internal fun of(id: Id, message: CharSequence): ValidationException = ValidationException(
             listOf(Field(id, message))
         )
     }
@@ -69,11 +69,11 @@ class ValidationException internal constructor(val errors: List<Field>) : Runtim
         /**
          * A a field error based on id and message.
          *
-         * @param id pcf.crskdev.inval.id.Id
+         * @param id Id
          * @param message Message.
          * @return Build
          */
-        fun add(id: Id, message: String): Builder {
+        fun add(id: Id, message: CharSequence): Builder {
             errors.add(Field(id, message))
             return this
         }
@@ -130,4 +130,4 @@ internal inline fun <T> ValidationException.Builder.buildToResult(successProvide
 /**
  * Alias for creating a ValidationException based on a message.
  */
-typealias ValidationExceptionProvider = (String) -> ValidationException
+typealias ValidationExceptionProvider = (CharSequence) -> ValidationException

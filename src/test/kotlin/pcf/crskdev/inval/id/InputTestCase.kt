@@ -163,4 +163,18 @@ internal class InputTestCase : StringSpec({
         Input(0.toId(), "foo", email)().isFailure shouldBe true
         Input(0.toId(), "foo@email.com", email)().isSuccess shouldBe true
     }
+
+    "should use custom message" {
+        val customMessage: CustomMessageValidation<String> = { msg ->
+            Validation {
+                error(msg)
+            }
+        }
+        val exception = Input(0.toId(), "foo", customMessage("Custom invalid message"))()
+            .exceptionOrNull()!! as ValidationException
+        exception
+            .errors
+            .first()
+            .message shouldBe "Custom invalid message"
+    }
 })

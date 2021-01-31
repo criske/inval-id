@@ -96,9 +96,9 @@ class ValidationScope internal constructor(
     /**
      * Add message error to the final field ValidationException.
      *
-     * @param message String.
+     * @param message CharSequence.
      */
-    fun error(message: String) {
+    fun error(message: CharSequence) {
         builder.add(provider(message))
     }
 }
@@ -113,7 +113,7 @@ class ValidationScope internal constructor(
  * @return Custom message Validation.
  */
 @Suppress("FunctionName")
-fun RegexValidation(expression: String, options: Set<RegexOption> = emptySet()): (String) -> Validation<CharSequence> {
+fun RegexValidation(expression: String, options: Set<RegexOption> = emptySet()): CustomMessageValidation<CharSequence> {
     val regex = when {
         options.isEmpty() -> expression.toRegex()
         options.size == 1 -> expression.toRegex(options.first())
@@ -128,3 +128,8 @@ fun RegexValidation(expression: String, options: Set<RegexOption> = emptySet()):
         validation
     }
 }
+
+/**
+ * Custom message validation.
+ */
+typealias CustomMessageValidation<T> = (CharSequence) -> Validation<T>
