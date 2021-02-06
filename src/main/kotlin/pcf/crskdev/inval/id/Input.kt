@@ -62,30 +62,8 @@ class Input<out T>(
      *
      * @return Result.
      */
-    operator fun invoke(): Result<T> = this.composedValidation(*this.validations)(this.input) {
+    operator fun invoke(): Result<T> = composed(*this.validations)(this.input) {
         ValidationException.of(this.id, it)
-    }
-
-    /**
-     * Composes multiple validation rules into one rule.
-     *
-     * @param T input Type.
-     * @param validations [Validation] rules.
-     * @return Result.
-     */
-    private fun <T> composedValidation(vararg validations: Validation<T>): Validation<T> = { input, error ->
-        validations.fold(Result.success(input)) { acc, curr ->
-            acc.flatMap { curr(input, error) }
-        }.onFailure { e ->
-            if (e !is ValidationException)
-                throw IllegalStateException(
-                    """
-                         Input failure expected to be a ValidationException but was ${e.javaClass.simpleName}.
-                         To avoid this kind error build your rule by using Validation helper function.
-                    """.trimIndent()
-
-                )
-        }
     }
 
     companion object {

@@ -128,3 +128,56 @@ fun RegexValidation(expression: String, options: Set<RegexOption> = emptySet()):
  * Custom message validation.
  */
 typealias CustomMessageValidation<T> = (CharSequence) -> Validation<T>
+
+/**
+ * Composes multiple validation rules into one rule.
+ *
+ * @param T input Type.
+ * @param validations [Validation] rules.
+ * @return Result.
+ */
+fun <T> composed(vararg validations: Validation<T>): Validation<T> = { input, error ->
+    validations.fold(Result.success(input)) { acc, curr ->
+        acc.flatMap { curr(input, error) }
+    }.onFailure { e ->
+        if (e !is ValidationException)
+            throw IllegalStateException(
+                """
+                   Input failure expected to be a ValidationException but was ${e.javaClass.simpleName}.
+                   To avoid this kind error build your rule by using Validation helper function.
+                """.trimIndent()
+
+            )
+    }
+}
+
+/**
+ * Declarative validation.
+ *
+ * @param T Input type.
+ * @param input Input value.
+ * @return Function that will apply the [Id].
+ */
+infix fun <T> Validation<T>.validates(input: T): (Id) -> Input<T> = {
+    Input(it, input, this)
+}
+
+/**
+ * Extension for the Function that will apply the [Id].
+ * Part of declarative validation chain. See [validates].
+ *
+ * @param T Input type.
+ * @param id Id.
+ * @return Input.
+ */
+infix fun <T> ((Id) -> Input<T>).withId(id: Id): Input<T> = this(id)
+
+/**
+ * Extension for the Function that will apply the [Id].
+ * Part of declarative validation chain. See [validates].
+ *
+ * @param T Input type.
+ * @param id Any value that will be converted to [Id].
+ * @return Input.
+ */
+infix fun <T> ((Id) -> Input<T>).withId(id: Any): Input<T> = this(id.toId())

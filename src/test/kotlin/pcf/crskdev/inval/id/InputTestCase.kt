@@ -196,4 +196,24 @@ internal class InputTestCase : StringSpec({
         }
         Input(0.toId(), "foo", rule)().isSuccess shouldBe true
     }
+
+    "should use validation declarative form" {
+        val ruleA = Validation<String> {}
+        val ruleB = Validation<String> {}
+
+        var input = ruleA validates "foo" withId 1.toId()
+
+        input.id shouldBe Id.Of(1)
+        input.input shouldBe "foo"
+
+        input = ruleA validates "foo" withId 1
+
+        input.id shouldBe Id.Of(1)
+        input.input shouldBe "foo"
+
+        input = composed(ruleA, ruleB) validates "foo" withId 1
+
+        input.id shouldBe Id.Of(1)
+        input.input shouldBe "foo"
+    }
 })
