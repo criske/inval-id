@@ -51,10 +51,11 @@ package pcf.crskdev.inval.id
  * @author Cristian Pela
  * @since 1.0
  */
-class Input<out T>(
+@Suppress("MemberVisibilityCanBePrivate")
+class Input<T>(
     val id: Id,
     val input: T,
-    private vararg val validations: Validation<T>
+    internal vararg val validations: Validation<T>
 ) {
 
     /**
@@ -62,7 +63,7 @@ class Input<out T>(
      *
      * @return Result.
      */
-    operator fun invoke(): Result<T> = composed(*this.validations)(this.input) {
+    operator fun invoke(): Result<T> = ComposedValidation(*this.validations)(this.input) {
         ValidationException.of(this.id, it)
     }
 

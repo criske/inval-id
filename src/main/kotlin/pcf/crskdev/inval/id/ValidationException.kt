@@ -100,6 +100,10 @@ class ValidationException internal constructor(val errors: List<Field>) : Runtim
          */
         fun build(): ValidationException = ValidationException(errors)
     }
+
+    override fun toString(): String {
+        return errors.joinToString("\n")
+    }
 }
 
 /**

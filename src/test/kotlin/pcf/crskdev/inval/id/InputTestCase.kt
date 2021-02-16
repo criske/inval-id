@@ -211,7 +211,7 @@ internal class InputTestCase : StringSpec({
         input.id shouldBe Id.Of(1)
         input.input shouldBe "foo"
 
-        input = composed(ruleA, ruleB) validates "foo" withId 1
+        input = ComposedValidation(ruleA, ruleB) validates "foo" withId 1
 
         input.id shouldBe Id.Of(1)
         input.input shouldBe "foo"
