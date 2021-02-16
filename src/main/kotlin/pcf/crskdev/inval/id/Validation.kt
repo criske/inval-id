@@ -136,7 +136,7 @@ typealias CustomMessageValidation<T> = (CharSequence) -> Validation<T>
  * @param validations [Validation] rules.
  * @return Result.
  */
-fun <T> composed(vararg validations: Validation<T>): Validation<T> = { input, error ->
+fun <T> ComposedValidation(vararg validations: Validation<T>): Validation<T> = { input, error ->
     validations.fold(Result.success(input)) { acc, curr ->
         acc.flatMap { curr(input, error) }
     }.onFailure { e ->
