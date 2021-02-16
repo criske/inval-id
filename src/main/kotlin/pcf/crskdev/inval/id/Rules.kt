@@ -30,4 +30,35 @@ package pcf.crskdev.inval.id
  *
  * @constructor Create empty Rules
  */
-object Rules
+object Rules {
+
+    /**
+     * The value of the field or property must not be empty.
+     * The length of the characters or array, and the size of a collection or map are evaluated.
+     *
+     * Supported types are:
+     * - CharSequence (length of character sequence is evaluated)
+     * - Collection (collection size is evaluated)
+     * - Map (map size is evaluated)
+     * - Array (array length is evaluated)
+     * @constructor Create empty Not empty
+     */
+    object NotEmpty {
+
+        operator fun <T> invoke(message: String = "Field or property required"): Validation<T> =
+            Validation { input ->
+                when (input) {
+                    is CharSequence -> errorOnFail(message) { input.isEmpty() }
+                    is Array<*> -> errorOnFail(message) { input.isEmpty() }
+                    is Collection<*> -> errorOnFail(message) { input.isEmpty() }
+                    is Map<*, *> -> errorOnFail(message) { input.isEmpty() }
+                    else -> throw IllegalArgumentException(
+                        """
+                        Unsupported type ${input!!::class.java.simpleName}, allowed: 
+                        CharSequence, Array, Collection and Map
+                        """.trimIndent()
+                    )
+                }
+            }
+    }
+}
