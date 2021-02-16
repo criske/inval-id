@@ -38,6 +38,10 @@ internal class ValidationExceptionTest : StringSpec({
             ValidationException.Field(1.toId(), "error#1"),
             ValidationException.Field(1.toId(), "error#2")
         )
+        exception.toString() shouldBe listOf(
+            ValidationException.Field(1.toId(), "error#1"),
+            ValidationException.Field(1.toId(), "error#2")
+        ).joinToString("\n")
     }
 
     "should create simple exception" {
