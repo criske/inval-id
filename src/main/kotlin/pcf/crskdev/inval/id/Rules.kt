@@ -33,6 +33,17 @@ package pcf.crskdev.inval.id
 object Rules {
 
     /**
+     * The value of the field or property must contain at least one non-white space character.
+     *
+     * @constructor Create empty Not blank
+     */
+    object NotBlank {
+
+        operator fun invoke(message: String = "Field or property required"): Validation<CharSequence> =
+            Validation { input -> errorOnFail(message) { input.isBlank() } }
+    }
+
+    /**
      * The value of the field or property must not be empty.
      * The length of the characters or array, and the size of a collection or map are evaluated.
      *
