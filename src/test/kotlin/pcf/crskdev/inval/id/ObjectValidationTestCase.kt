@@ -44,9 +44,11 @@ class ObjectValidationTestCase : StringSpec({
             ComposedValidation(empty, emailRule) validates input.email withId "email"
             ObjectValidation<Info> {
                 empty validates input.address withId "address"
-                empty validates input.phone withId "phone"
+                empty validates input.phone withId "phone".toId()
             } validates input.info withId "info"
         } validates account withId "account"
+
+        input.validations.size shouldBe 1
 
         val failure = shouldThrow<ValidationException> {
             input().getOrThrow()
