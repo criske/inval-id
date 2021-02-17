@@ -24,6 +24,11 @@
 
 package pcf.crskdev.inval.id
 
+import java.math.BigDecimal
+import java.math.BigInteger
+import java.math.MathContext
+import java.math.RoundingMode
+
 /**
  * Built-in validation rules offered by inval-id that
  * loosely follow [javax.validation.constraints](https://javaee.github.io/javaee-spec/javadocs/javax/validation/constraints/package-frame.html)
@@ -72,4 +77,177 @@ object Rules {
                 }
             }
     }
+
+    /**
+     * The value of the field or property must be a [Number] value lower than or equal
+     * to the [Number] in the value element.
+     */
+    object Max {
+
+        /**
+         * Invokes the rule.
+         *
+         * Returns _(T) -> Validation<T>_ lambda, where T param is the maximum boundary [Number] against which
+         * input will be tested.
+         *
+         * Example:
+         *
+         * _Max<Float>(rounding = 2 rmode RoundingMode.HALF_UP)(10.12f) validates 10.118654f withId 1_
+         * (succeeds because input _10.118654f_ is rounded up to _10.12f_, the max allowed)
+         *
+         * _Max<Int>()(10) validates 19 withId 1_ (fails because min is _10_ and input is _19_)
+         *
+         * @param T [Number] type.
+         * @param message Custom message. It could have at most one %s to show the max value in it.
+         * @param rounding [MathContext] approximation digit precision applicable for floats and doubles inputs,
+         * otherwise for integers will be ignored.
+         * @return (T) -> Validation<T>.
+         */
+        operator fun <T : Number> invoke(
+            message: String = "Input must be at most %s",
+            rounding: MathContext = MathContext.UNLIMITED
+        ): (T) -> Validation<T> = { max ->
+            Validation { input ->
+                val predicate: (T) -> Boolean = when (input) {
+                    is Float -> {
+                        {
+                            input.toBigDecimal().setScale(rounding.precision, rounding.roundingMode) > max.toFloat()
+                                .toBigDecimal()
+                        }
+                    }
+                    is Double -> {
+                        {
+                            input.toBigDecimal().setScale(rounding.precision, rounding.roundingMode) > max.toDouble()
+                                .toBigDecimal()
+                        }
+                    }
+                    is BigDecimal -> {
+                        {
+                            input.setScale(rounding.precision, rounding.roundingMode) > max as BigDecimal
+                        }
+                    }
+                    is BigInteger -> {
+                        {
+                            input > max as BigInteger
+                        }
+                    }
+                    is Int -> {
+                        {
+                            input.toInt() > max.toInt()
+                        }
+                    }
+                    is Long -> {
+                        {
+                            input.toLong() > max.toLong()
+                        }
+                    }
+                    is Short -> {
+                        {
+                            input.toShort() > max.toShort()
+                        }
+                    }
+                    is Byte -> {
+                        {
+                            input.toByte() > max.toByte()
+                        }
+                    }
+                    else -> throw IllegalArgumentException("Unsupported type ${input::class.java.simpleName}")
+                }
+                errorOnFail(String.format(message, max), predicate)
+            }
+        }
+    }
+
+    /**
+     * The value of the field or property must be a [Number] value larger than or equal
+     * to the [Number] in the value element.
+     */
+    object Min {
+
+        /**
+         * Invokes the rule.
+         *
+         * Returns _(T) -> Validation<T>_ lambda, where T param is the minimum boundary [Number] against which
+         * input will be tested.
+         *
+         * Example:
+         *
+         * _Min<Float>(rounding = 2 rmode RoundingMode.HALF_UP)(10.12f) validates 10.118654f withId 1_
+         * (succeeds because input _10.118654f_ is rounded up to _10.12f_, the min allowed)
+         *
+         * _Min<Int>()(10) validates 9 withId 1_ (fails because min is _10_ and input is _9_)
+         *
+         * @param T [Number] type.
+         * @param message Custom message. It could have at most one %s to show the min value in it.
+         * @param rounding [MathContext] approximation digit precision applicable for floats and doubles inputs,
+         * otherwise for integers will be ignored.
+         * @return (T) -> Validation<T>.
+         */
+        operator fun <T : Number> invoke(
+            message: String = "Input must be at least %s",
+            rounding: MathContext = MathContext.UNLIMITED
+        ): (T) -> Validation<T> = { min ->
+            Validation { input ->
+                val predicate: (T) -> Boolean = when (input) {
+                    is Float -> {
+                        {
+                            input.toBigDecimal().setScale(rounding.precision, rounding.roundingMode) < min.toFloat()
+                                .toBigDecimal()
+                        }
+                    }
+                    is Double -> {
+                        {
+                            input.toBigDecimal().setScale(rounding.precision, rounding.roundingMode) < min.toDouble()
+                                .toBigDecimal()
+                        }
+                    }
+                    is BigDecimal -> {
+                        {
+                            input.setScale(rounding.precision, rounding.roundingMode) < min as BigDecimal
+                        }
+                    }
+                    is BigInteger -> {
+                        {
+                            input < min as BigInteger
+                        }
+                    }
+                    is Int -> {
+                        {
+                            input.toInt() < min.toInt()
+                        }
+                    }
+                    is Long -> {
+                        {
+                            input.toLong() < min.toLong()
+                        }
+                    }
+                    is Short -> {
+                        {
+                            input.toShort() < min.toShort()
+                        }
+                    }
+                    is Byte -> {
+                        {
+                            input.toByte() < min.toByte()
+                        }
+                    }
+                    else -> throw IllegalArgumentException("Unsupported type ${input::class.java.simpleName}")
+                }
+                errorOnFail(String.format(message, min), predicate)
+            }
+        }
+    }
+
+    /**
+     * Handy extension to create a [MathContext] used by [Min] and [Max] for rounding when using float/double inputs.
+     *
+     * Receiver is the number of decimal digits after rounding will kick in.
+     *
+     * Example:
+     *
+     * "(3 rmode RoundingMode.HALF_UP )"
+     *
+     * @param roundingMode [RoundingMode] strategy.
+     */
+    infix fun Int.rmode(roundingMode: RoundingMode) = MathContext(this, roundingMode)
 }
