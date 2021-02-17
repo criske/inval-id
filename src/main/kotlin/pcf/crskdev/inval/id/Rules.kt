@@ -38,6 +38,38 @@ import java.math.RoundingMode
 object Rules {
 
     /**
+     * The value of the field or property must be false.
+     */
+    object AssertTrue {
+
+        /**
+         * Invoke.
+         *
+         * @param message Message.
+         * @return Validation<Boolean>
+         */
+        operator fun invoke(message: String = "Boolean flag must be true"): Validation<Boolean> = Validation { input ->
+            errorOnFail(message) { !input }
+        }
+    }
+
+    /**
+     * The value of the field or property must be false.
+     */
+    object AssertFalse {
+
+        /**
+         * Invoke.
+         *
+         * @param message Message.
+         * @return Validation<Boolean>
+         */
+        operator fun invoke(message: String = "Boolean flag must be false"): Validation<Boolean> = Validation { input ->
+            errorOnFail(message) { input }
+        }
+    }
+
+    /**
      * The value of the field or property must contain at least one non-white space character.
      *
      * @constructor Create empty Not blank

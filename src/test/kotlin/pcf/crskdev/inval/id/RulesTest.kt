@@ -28,6 +28,8 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.matchers.shouldBe
 import io.mockk.mockk
+import pcf.crskdev.inval.id.Rules.AssertFalse
+import pcf.crskdev.inval.id.Rules.AssertTrue
 import pcf.crskdev.inval.id.Rules.Max
 import pcf.crskdev.inval.id.Rules.Min
 import pcf.crskdev.inval.id.Rules.NotBlank
@@ -38,6 +40,18 @@ import java.math.BigInteger
 import java.math.RoundingMode
 
 internal class RulesTest : DescribeSpec({
+
+    describe("Asserts test") {
+        it("should apply assert true") {
+            (AssertTrue() validates false withId 1)().isFailure shouldBe true
+            (AssertTrue() validates true withId 1)().isSuccess shouldBe true
+        }
+
+        it("should apply assert false") {
+            (AssertFalse() validates true withId 1)().isFailure shouldBe true
+            (AssertFalse() validates false withId 1)().isSuccess shouldBe true
+        }
+    }
 
     describe("Not Empty Tests") {
 
