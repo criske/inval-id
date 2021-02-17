@@ -126,17 +126,20 @@ object Rules {
                     {
                         input.toBigDecimal().setScale(scale.precision, scale.roundingMode) > max.toFloat()
                             .toBigDecimal()
+                            .setScale(scale.precision, scale.roundingMode)
                     }
                 }
                 is Double -> {
                     {
                         input.toBigDecimal().setScale(scale.precision, scale.roundingMode) > max.toDouble()
                             .toBigDecimal()
+                            .setScale(scale.precision, scale.roundingMode)
                     }
                 }
                 is BigDecimal -> {
                     {
-                        input.setScale(scale.precision, scale.roundingMode) > max as BigDecimal
+                        input.setScale(scale.precision, scale.roundingMode) > (max as BigDecimal)
+                            .setScale(scale.precision, scale.roundingMode)
                     }
                 }
                 is BigInteger -> {
@@ -199,17 +202,20 @@ object Rules {
                     {
                         input.toBigDecimal().setScale(scale.precision, scale.roundingMode) < min.toFloat()
                             .toBigDecimal()
+                            .setScale(scale.precision, scale.roundingMode)
                     }
                 }
                 is Double -> {
                     {
                         input.toBigDecimal().setScale(scale.precision, scale.roundingMode) < min.toDouble()
                             .toBigDecimal()
+                            .setScale(scale.precision, scale.roundingMode)
                     }
                 }
                 is BigDecimal -> {
                     {
-                        input.setScale(scale.precision, scale.roundingMode) < min as BigDecimal
+                        input.setScale(scale.precision, scale.roundingMode) < (min as BigDecimal)
+                            .setScale(scale.precision, scale.roundingMode)
                     }
                 }
                 is BigInteger -> {
