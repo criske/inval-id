@@ -32,12 +32,12 @@ import pcf.crskdev.inval.id.Rules.AssertFalse
 import pcf.crskdev.inval.id.Rules.AssertTrue
 import pcf.crskdev.inval.id.Rules.Max
 import pcf.crskdev.inval.id.Rules.Min
+import pcf.crskdev.inval.id.Rules.MinMax
 import pcf.crskdev.inval.id.Rules.NotBlank
 import pcf.crskdev.inval.id.Rules.NotEmpty
-import pcf.crskdev.inval.id.Rules.rmode
+import pcf.crskdev.inval.id.Rules.places
 import java.math.BigDecimal
 import java.math.BigInteger
-import java.math.RoundingMode
 
 internal class RulesTest : DescribeSpec({
 
@@ -79,7 +79,7 @@ internal class RulesTest : DescribeSpec({
     describe("Min Tests") {
 
         it("should apply approximation to floats and doubles") {
-            (Min<Float>(rounding = 2 rmode RoundingMode.HALF_UP)(10.12f) validates 10.118654f withId 1)().isSuccess shouldBe true
+            (Min<Float>(scale = 2.places())(10.12f) validates 10.118654f withId 1)().isSuccess shouldBe true
             (Min<Double>()(10.0) validates 9.99999999 withId 1)().isSuccess shouldBe true
         }
 
@@ -117,7 +117,7 @@ internal class RulesTest : DescribeSpec({
     describe("Max Tests") {
 
         it("should apply approximation to floats and doubles") {
-            (Max<Float>(rounding = 2 rmode RoundingMode.HALF_UP)(10.12f) validates 10.118654f withId 1)().isSuccess shouldBe true
+            (Max<Float>(scale = 2.places())(10.12f) validates 10.118654f withId 1)().isSuccess shouldBe true
             (Max<Double>()(10.0) validates 9.99999999 withId 1)().isSuccess shouldBe true
         }
 
@@ -149,6 +149,24 @@ internal class RulesTest : DescribeSpec({
         it("should have custom message on fail") {
             val fail = (Max<Int>("My message")(10) validates 19 withId 1)().exceptionOrNull()!! as ValidationException
             fail.errors.first().message shouldBe "My message"
+        }
+    }
+
+    describe("Min Max tests") {
+        it("should apply min max") {
+            val minMax = MinMax<Int>()(10, 20)
+            (minMax validates 15 withId 1)().isSuccess shouldBe true
+            (minMax validates 10 withId 1)().isSuccess shouldBe true
+            (minMax validates 20 withId 1)().isSuccess shouldBe true
+
+            (minMax validates 9 withId 1)().isFailure shouldBe true
+            (minMax validates 29 withId 1)().isFailure shouldBe true
+        }
+
+        it("should have custom message") {
+            val minMax = MinMax<Int> { min, max -> "Bad input value. Must be between $min and $max" }
+            val fail = (minMax(10, 20) validates 25 withId 1)().exceptionOrNull()!! as ValidationException
+            fail.errors.first().message shouldBe "Bad input value. Must be between 10 and 20"
         }
     }
 })

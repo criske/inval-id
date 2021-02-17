@@ -22,6 +22,8 @@
  * SOFTWARE.
  */
 
+@file:Suppress("FunctionName")
+
 package pcf.crskdev.inval.id
 
 import java.math.BigDecimal
@@ -33,7 +35,6 @@ import java.math.RoundingMode
  * Built-in validation rules offered by inval-id that
  * loosely follow [javax.validation.constraints](https://javaee.github.io/javaee-spec/javadocs/javax/validation/constraints/package-frame.html)
  *
- * @constructor Create empty Rules
  */
 object Rules {
 
@@ -124,38 +125,38 @@ object Rules {
          *
          * Example:
          *
-         * _Max<Float>(rounding = 2 rmode RoundingMode.HALF_UP)(10.12f) validates 10.118654f withId 1_
+         * _Max<Float>(scale = 2 rmode RoundingMode.HALF_UP)(10.12f) validates 10.118654f withId 1_
          * (succeeds because input _10.118654f_ is rounded up to _10.12f_, the max allowed)
          *
          * _Max<Int>()(10) validates 19 withId 1_ (fails because min is _10_ and input is _19_)
          *
          * @param T [Number] type.
          * @param message Custom message. It could have at most one %s to show the max value in it.
-         * @param rounding [MathContext] approximation digit precision applicable for floats and doubles inputs,
+         * @param scale [MathContext] approximation scale applicable for floats and doubles inputs decimal places.
          * otherwise for integers will be ignored.
          * @return (T) -> Validation<T>.
          */
         operator fun <T : Number> invoke(
             message: String = "Input must be at most %s",
-            rounding: MathContext = MathContext.UNLIMITED
+            scale: MathContext = MathContext.UNLIMITED
         ): (T) -> Validation<T> = { max ->
             Validation { input ->
                 val predicate: (T) -> Boolean = when (input) {
                     is Float -> {
                         {
-                            input.toBigDecimal().setScale(rounding.precision, rounding.roundingMode) > max.toFloat()
+                            input.toBigDecimal().setScale(scale.precision, scale.roundingMode) > max.toFloat()
                                 .toBigDecimal()
                         }
                     }
                     is Double -> {
                         {
-                            input.toBigDecimal().setScale(rounding.precision, rounding.roundingMode) > max.toDouble()
+                            input.toBigDecimal().setScale(scale.precision, scale.roundingMode) > max.toDouble()
                                 .toBigDecimal()
                         }
                     }
                     is BigDecimal -> {
                         {
-                            input.setScale(rounding.precision, rounding.roundingMode) > max as BigDecimal
+                            input.setScale(scale.precision, scale.roundingMode) > max as BigDecimal
                         }
                     }
                     is BigInteger -> {
@@ -204,38 +205,38 @@ object Rules {
          *
          * Example:
          *
-         * _Min<Float>(rounding = 2 rmode RoundingMode.HALF_UP)(10.12f) validates 10.118654f withId 1_
+         * _Min<Float>(scale = 2 rmode RoundingMode.HALF_UP)(10.12f) validates 10.118654f withId 1_
          * (succeeds because input _10.118654f_ is rounded up to _10.12f_, the min allowed)
          *
          * _Min<Int>()(10) validates 9 withId 1_ (fails because min is _10_ and input is _9_)
          *
          * @param T [Number] type.
          * @param message Custom message. It could have at most one %s to show the min value in it.
-         * @param rounding [MathContext] approximation digit precision applicable for floats and doubles inputs,
+         * @param scale [MathContext] approximation scale applicable for floats and doubles inputs decimal places,
          * otherwise for integers will be ignored.
          * @return (T) -> Validation<T>.
          */
         operator fun <T : Number> invoke(
             message: String = "Input must be at least %s",
-            rounding: MathContext = MathContext.UNLIMITED
+            scale: MathContext = MathContext.UNLIMITED
         ): (T) -> Validation<T> = { min ->
             Validation { input ->
                 val predicate: (T) -> Boolean = when (input) {
                     is Float -> {
                         {
-                            input.toBigDecimal().setScale(rounding.precision, rounding.roundingMode) < min.toFloat()
+                            input.toBigDecimal().setScale(scale.precision, scale.roundingMode) < min.toFloat()
                                 .toBigDecimal()
                         }
                     }
                     is Double -> {
                         {
-                            input.toBigDecimal().setScale(rounding.precision, rounding.roundingMode) < min.toDouble()
+                            input.toBigDecimal().setScale(scale.precision, scale.roundingMode) < min.toDouble()
                                 .toBigDecimal()
                         }
                     }
                     is BigDecimal -> {
                         {
-                            input.setScale(rounding.precision, rounding.roundingMode) < min as BigDecimal
+                            input.setScale(scale.precision, scale.roundingMode) < min as BigDecimal
                         }
                     }
                     is BigInteger -> {
@@ -271,15 +272,32 @@ object Rules {
     }
 
     /**
-     * Handy extension to create a [MathContext] used by [Min] and [Max] for rounding when using float/double inputs.
+     * Interval Rule, that uses internally [Min] and [Max] rules.
      *
-     * Receiver is the number of decimal digits after rounding will kick in.
+     * @param T [Number] type.
+     * @param messageProvider Message on fail.
+     * @param rounding Decimal places scaling. See [Min] and [Max]
+     * @return Lambda that takes [Min] Number and [Max] Number as params and returns a Validation.
+     */
+    fun <T : Number> MinMax(
+        rounding: MathContext = MathContext.UNLIMITED,
+        messageProvider: (T, T) -> String = { min, max -> "Invalid interval [$min, $max]" }
+    ): (T, T) -> Validation<T> = { min, max ->
+        val message = messageProvider(min, max)
+        ComposedValidation(Min<T>(message, rounding)(min), Max<T>(message, rounding)(max))
+    }
+
+    /**
+     * Handy extension to create a [MathContext] used by [Min] and [Max] for decimal scaling when dealing with
+     * fraction inputs.
+     *
+     * Receiver is the number of decimal places after scaling will kick in.
      *
      * Example:
      *
-     * "(3 rmode RoundingMode.HALF_UP )"
+     * "3.places(RoundingMode.HALF_EVEN)"
      *
      * @param roundingMode [RoundingMode] strategy.
      */
-    infix fun Int.rmode(roundingMode: RoundingMode) = MathContext(this, roundingMode)
+    fun Int.places(roundingMode: RoundingMode = RoundingMode.HALF_UP) = MathContext(this, roundingMode)
 }
