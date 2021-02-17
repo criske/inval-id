@@ -27,8 +27,15 @@ package pcf.crskdev.inval.id
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.matchers.shouldBe
+import io.mockk.mockk
+import pcf.crskdev.inval.id.Rules.Max
+import pcf.crskdev.inval.id.Rules.Min
 import pcf.crskdev.inval.id.Rules.NotBlank
 import pcf.crskdev.inval.id.Rules.NotEmpty
+import pcf.crskdev.inval.id.Rules.rmode
+import java.math.BigDecimal
+import java.math.BigInteger
+import java.math.RoundingMode
 
 internal class RulesTest : DescribeSpec({
 
@@ -52,6 +59,82 @@ internal class RulesTest : DescribeSpec({
 
         it("should apply rule") {
             (NotBlank() validates "   " withId 1)().isFailure shouldBe true
+        }
+    }
+
+    describe("Min Tests") {
+
+        it("should apply approximation to floats and doubles") {
+            (Min<Float>(rounding = 2 rmode RoundingMode.HALF_UP)(10.12f) validates 10.118654f withId 1)().isSuccess shouldBe true
+            (Min<Double>()(10.0) validates 9.99999999 withId 1)().isSuccess shouldBe true
+        }
+
+        it("should apply to integer numbers") {
+            (Min<Int>()(10) validates 9 withId 1)().isFailure shouldBe true
+            (Min<Int>()(9) validates 9 withId 1)().isSuccess shouldBe true
+
+            (Min<Long>()(10L) validates 9L withId 1)().isFailure shouldBe true
+            (Min<Long>()(9L) validates 9L withId 1)().isSuccess shouldBe true
+
+            (Min<Short>()(10) validates 9 withId 1)().isFailure shouldBe true
+            (Min<Short>()(9) validates 9 withId 1)().isSuccess shouldBe true
+
+            (Min<Byte>()(10) validates 9 withId 1)().isFailure shouldBe true
+            (Min<Byte>()(9) validates 9 withId 1)().isSuccess shouldBe true
+        }
+
+        it("should apply to BigDecimal/BigInteger") {
+            (Min<BigInteger>()(BigInteger.TEN) validates BigInteger.valueOf(9) withId 1)().isFailure shouldBe true
+            (Min<BigDecimal>()(BigDecimal.valueOf(1.0)) validates BigDecimal.valueOf(0.0) withId 1)().isFailure shouldBe true
+        }
+
+        it("should throw if Number type is not supported") {
+            shouldThrow<IllegalArgumentException> {
+                (Min<Number>()(mockk()) validates mockk() withId 1)()
+            }
+        }
+
+        it("should have custom message on fail") {
+            val fail = (Min<Int>("My message")(10) validates 9 withId 1)().exceptionOrNull()!! as ValidationException
+            fail.errors.first().message shouldBe "My message"
+        }
+    }
+
+    describe("Max Tests") {
+
+        it("should apply approximation to floats and doubles") {
+            (Max<Float>(rounding = 2 rmode RoundingMode.HALF_UP)(10.12f) validates 10.118654f withId 1)().isSuccess shouldBe true
+            (Max<Double>()(10.0) validates 9.99999999 withId 1)().isSuccess shouldBe true
+        }
+
+        it("should apply to integer numbers") {
+            (Max<Int>()(10) validates 19 withId 1)().isFailure shouldBe true
+            (Max<Int>()(9) validates 9 withId 1)().isSuccess shouldBe true
+
+            (Max<Long>()(10L) validates 19L withId 1)().isFailure shouldBe true
+            (Max<Long>()(9L) validates 9L withId 1)().isSuccess shouldBe true
+
+            (Max<Short>()(10) validates 19 withId 1)().isFailure shouldBe true
+            (Max<Short>()(9) validates 9 withId 1)().isSuccess shouldBe true
+
+            (Max<Byte>()(10) validates 19 withId 1)().isFailure shouldBe true
+            (Max<Byte>()(9) validates 9 withId 1)().isSuccess shouldBe true
+        }
+
+        it("should apply to BigDecimal/BigInteger") {
+            (Max<BigInteger>()(BigInteger.TEN) validates BigInteger.valueOf(19) withId 1)().isFailure shouldBe true
+            (Max<BigDecimal>()(BigDecimal.valueOf(0.0)) validates BigDecimal.valueOf(1.0) withId 1)().isFailure shouldBe true
+        }
+
+        it("should throw if Number type is not supported") {
+            shouldThrow<IllegalArgumentException> {
+                (Max<Number>()(mockk()) validates mockk() withId 1)()
+            }
+        }
+
+        it("should have custom message on fail") {
+            val fail = (Max<Int>("My message")(10) validates 19 withId 1)().exceptionOrNull()!! as ValidationException
+            fail.errors.first().message shouldBe "My message"
         }
     }
 })
