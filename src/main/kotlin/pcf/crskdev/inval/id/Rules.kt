@@ -40,46 +40,32 @@ object Rules {
 
     /**
      * The value of the field or property must be false.
+     *
+     * @param message Message.
+     * @return Validation<Boolean>
      */
-    object AssertTrue {
-
-        /**
-         * Invoke.
-         *
-         * @param message Message.
-         * @return Validation<Boolean>
-         */
-        operator fun invoke(message: String = "Boolean flag must be true"): Validation<Boolean> = Validation { input ->
-            errorOnFail(message) { !input }
-        }
+    fun AssertTrue(message: String = "Boolean flag must be true"): Validation<Boolean> = Validation { input ->
+        errorOnFail(message) { !input }
     }
 
     /**
      * The value of the field or property must be false.
+     *
+     * @param message Message.
+     * @return Validation<Boolean>
      */
-    object AssertFalse {
-
-        /**
-         * Invoke.
-         *
-         * @param message Message.
-         * @return Validation<Boolean>
-         */
-        operator fun invoke(message: String = "Boolean flag must be false"): Validation<Boolean> = Validation { input ->
-            errorOnFail(message) { input }
-        }
+    fun AssertFalse(message: String = "Boolean flag must be false"): Validation<Boolean> = Validation { input ->
+        errorOnFail(message) { input }
     }
 
     /**
      * The value of the field or property must contain at least one non-white space character.
      *
-     * @constructor Create empty Not blank
+     * @param message Message.
+     * @return Validation<CharSequence>
      */
-    object NotBlank {
-
-        operator fun invoke(message: String = "Field or property required"): Validation<CharSequence> =
-            Validation { input -> errorOnFail(message) { input.isBlank() } }
-    }
+    fun NotBlank(message: String = "Field or property required"): Validation<CharSequence> =
+        Validation { input -> errorOnFail(message) { input.isBlank() } }
 
     /**
      * The value of the field or property must not be empty.
@@ -90,184 +76,170 @@ object Rules {
      * - Collection (collection size is evaluated)
      * - Map (map size is evaluated)
      * - Array (array length is evaluated)
-     * @constructor Create empty Not empty
+     *
+     * @param message Message.
+     * @return Validation<CharSequence>
      */
-    object NotEmpty {
-
-        operator fun <T> invoke(message: String = "Field or property required"): Validation<T> =
-            Validation { input ->
-                when (input) {
-                    is CharSequence -> errorOnFail(message) { input.isEmpty() }
-                    is Array<*> -> errorOnFail(message) { input.isEmpty() }
-                    is Collection<*> -> errorOnFail(message) { input.isEmpty() }
-                    is Map<*, *> -> errorOnFail(message) { input.isEmpty() }
-                    else -> throw IllegalArgumentException(
-                        """
+    fun <T> NotEmpty(message: String = "Field or property required"): Validation<T> =
+        Validation { input ->
+            when (input) {
+                is CharSequence -> errorOnFail(message) { input.isEmpty() }
+                is Array<*> -> errorOnFail(message) { input.isEmpty() }
+                is Collection<*> -> errorOnFail(message) { input.isEmpty() }
+                is Map<*, *> -> errorOnFail(message) { input.isEmpty() }
+                else -> throw IllegalArgumentException(
+                    """
                         Unsupported type ${input!!::class.java.simpleName}, allowed: 
                         CharSequence, Array, Collection and Map
-                        """.trimIndent()
-                    )
-                }
+                    """.trimIndent()
+                )
             }
-    }
+        }
 
     /**
      * The value of the field or property must be a [Number] value lower than or equal
      * to the [Number] in the value element.
+     *
+     * Returns _(T) -> Validation<T>_ lambda, where T param is the maximum boundary [Number] against which
+     * input will be tested.
+     *
+     * Example:
+     *
+     * _Max<Float>(scale = 2.places())(10.12f) validates 10.118654f withId 1_
+     * (succeeds because input _10.118654f_ is rounded up to _10.12f_, the max allowed)
+     *
+     * _Max<Int>()(10) validates 19 withId 1_ (fails because min is _10_ and input is _19_)
+     *
+     * @param T [Number] type.
+     * @param messageProvider Custom message lambda. Takes the input and max as args.
+     * @param scale [MathContext] approximation scale applicable for floats and doubles inputs decimal places.
+     * otherwise for integers will be ignored.
+     * @return (T) -> Validation<T>.
      */
-    object Max {
-
-        /**
-         * Invokes the rule.
-         *
-         * Returns _(T) -> Validation<T>_ lambda, where T param is the maximum boundary [Number] against which
-         * input will be tested.
-         *
-         * Example:
-         *
-         * _Max<Float>(scale = 2 rmode RoundingMode.HALF_UP)(10.12f) validates 10.118654f withId 1_
-         * (succeeds because input _10.118654f_ is rounded up to _10.12f_, the max allowed)
-         *
-         * _Max<Int>()(10) validates 19 withId 1_ (fails because min is _10_ and input is _19_)
-         *
-         * @param T [Number] type.
-         * @param message Custom message. It could have at most one %s to show the max value in it.
-         * @param scale [MathContext] approximation scale applicable for floats and doubles inputs decimal places.
-         * otherwise for integers will be ignored.
-         * @return (T) -> Validation<T>.
-         */
-        operator fun <T : Number> invoke(
-            message: String = "Input must be at most %s",
-            scale: MathContext = MathContext.UNLIMITED
-        ): (T) -> Validation<T> = { max ->
-            Validation { input ->
-                val predicate: (T) -> Boolean = when (input) {
-                    is Float -> {
-                        {
-                            input.toBigDecimal().setScale(scale.precision, scale.roundingMode) > max.toFloat()
-                                .toBigDecimal()
-                        }
+    fun <T : Number> Max(
+        scale: MathContext = MathContext.UNLIMITED,
+        messageProvider: (T, T) -> String = { input, max -> "Input $input must be at most $max." }
+    ): (T) -> Validation<T> = { max ->
+        Validation { input ->
+            val predicate: (T) -> Boolean = when (input) {
+                is Float -> {
+                    {
+                        input.toBigDecimal().setScale(scale.precision, scale.roundingMode) > max.toFloat()
+                            .toBigDecimal()
                     }
-                    is Double -> {
-                        {
-                            input.toBigDecimal().setScale(scale.precision, scale.roundingMode) > max.toDouble()
-                                .toBigDecimal()
-                        }
-                    }
-                    is BigDecimal -> {
-                        {
-                            input.setScale(scale.precision, scale.roundingMode) > max as BigDecimal
-                        }
-                    }
-                    is BigInteger -> {
-                        {
-                            input > max as BigInteger
-                        }
-                    }
-                    is Int -> {
-                        {
-                            input.toInt() > max.toInt()
-                        }
-                    }
-                    is Long -> {
-                        {
-                            input.toLong() > max.toLong()
-                        }
-                    }
-                    is Short -> {
-                        {
-                            input.toShort() > max.toShort()
-                        }
-                    }
-                    is Byte -> {
-                        {
-                            input.toByte() > max.toByte()
-                        }
-                    }
-                    else -> throw IllegalArgumentException("Unsupported type ${input::class.java.simpleName}")
                 }
-                errorOnFail(String.format(message, max), predicate)
+                is Double -> {
+                    {
+                        input.toBigDecimal().setScale(scale.precision, scale.roundingMode) > max.toDouble()
+                            .toBigDecimal()
+                    }
+                }
+                is BigDecimal -> {
+                    {
+                        input.setScale(scale.precision, scale.roundingMode) > max as BigDecimal
+                    }
+                }
+                is BigInteger -> {
+                    {
+                        input > max as BigInteger
+                    }
+                }
+                is Int -> {
+                    {
+                        input.toInt() > max.toInt()
+                    }
+                }
+                is Long -> {
+                    {
+                        input.toLong() > max.toLong()
+                    }
+                }
+                is Short -> {
+                    {
+                        input.toShort() > max.toShort()
+                    }
+                }
+                is Byte -> {
+                    {
+                        input.toByte() > max.toByte()
+                    }
+                }
+                else -> throw IllegalArgumentException("Unsupported type ${input::class.java.simpleName}")
             }
+            errorOnFail(messageProvider(input, max), predicate)
         }
     }
 
     /**
      * The value of the field or property must be a [Number] value larger than or equal
-     * to the [Number] in the value element.
+     * to the [Number] in the value element.         *
+     * Returns _(T) -> Validation<T>_ lambda, where T param is the minimum boundary [Number] against which
+     * input will be tested.
+     *
+     * Example:
+     *
+     * _Min<Float>(scale = 2.places())(10.12f) validates 10.118654f withId 1_
+     * (succeeds because input _10.118654f_ is rounded up to _10.12f_, the min allowed)
+     *
+     * _Min<Int>()(10) validates 9 withId 1_ (fails because min is _10_ and input is _9_)
+     *
+     * @param T [Number] type.
+     * @param messageProvider Custom message lambda. Takes the input and min as args.
+     * @param scale [MathContext] approximation scale applicable for floats and doubles inputs decimal places,
+     * otherwise for integers will be ignored.
+     * @return (T) -> Validation<T>.
      */
-    object Min {
-
-        /**
-         * Invokes the rule.
-         *
-         * Returns _(T) -> Validation<T>_ lambda, where T param is the minimum boundary [Number] against which
-         * input will be tested.
-         *
-         * Example:
-         *
-         * _Min<Float>(scale = 2 rmode RoundingMode.HALF_UP)(10.12f) validates 10.118654f withId 1_
-         * (succeeds because input _10.118654f_ is rounded up to _10.12f_, the min allowed)
-         *
-         * _Min<Int>()(10) validates 9 withId 1_ (fails because min is _10_ and input is _9_)
-         *
-         * @param T [Number] type.
-         * @param message Custom message. It could have at most one %s to show the min value in it.
-         * @param scale [MathContext] approximation scale applicable for floats and doubles inputs decimal places,
-         * otherwise for integers will be ignored.
-         * @return (T) -> Validation<T>.
-         */
-        operator fun <T : Number> invoke(
-            message: String = "Input must be at least %s",
-            scale: MathContext = MathContext.UNLIMITED
-        ): (T) -> Validation<T> = { min ->
-            Validation { input ->
-                val predicate: (T) -> Boolean = when (input) {
-                    is Float -> {
-                        {
-                            input.toBigDecimal().setScale(scale.precision, scale.roundingMode) < min.toFloat()
-                                .toBigDecimal()
-                        }
+    fun <T : Number> Min(
+        scale: MathContext = MathContext.UNLIMITED,
+        messageProvider: (T, T) -> String = { input, min -> "Input $input must be at least $min." }
+    ): (T) -> Validation<T> = { min ->
+        Validation { input ->
+            val predicate: (T) -> Boolean = when (input) {
+                is Float -> {
+                    {
+                        input.toBigDecimal().setScale(scale.precision, scale.roundingMode) < min.toFloat()
+                            .toBigDecimal()
                     }
-                    is Double -> {
-                        {
-                            input.toBigDecimal().setScale(scale.precision, scale.roundingMode) < min.toDouble()
-                                .toBigDecimal()
-                        }
-                    }
-                    is BigDecimal -> {
-                        {
-                            input.setScale(scale.precision, scale.roundingMode) < min as BigDecimal
-                        }
-                    }
-                    is BigInteger -> {
-                        {
-                            input < min as BigInteger
-                        }
-                    }
-                    is Int -> {
-                        {
-                            input.toInt() < min.toInt()
-                        }
-                    }
-                    is Long -> {
-                        {
-                            input.toLong() < min.toLong()
-                        }
-                    }
-                    is Short -> {
-                        {
-                            input.toShort() < min.toShort()
-                        }
-                    }
-                    is Byte -> {
-                        {
-                            input.toByte() < min.toByte()
-                        }
-                    }
-                    else -> throw IllegalArgumentException("Unsupported type ${input::class.java.simpleName}")
                 }
-                errorOnFail(String.format(message, min), predicate)
+                is Double -> {
+                    {
+                        input.toBigDecimal().setScale(scale.precision, scale.roundingMode) < min.toDouble()
+                            .toBigDecimal()
+                    }
+                }
+                is BigDecimal -> {
+                    {
+                        input.setScale(scale.precision, scale.roundingMode) < min as BigDecimal
+                    }
+                }
+                is BigInteger -> {
+                    {
+                        input < min as BigInteger
+                    }
+                }
+                is Int -> {
+                    {
+                        input.toInt() < min.toInt()
+                    }
+                }
+                is Long -> {
+                    {
+                        input.toLong() < min.toLong()
+                    }
+                }
+                is Short -> {
+                    {
+                        input.toShort() < min.toShort()
+                    }
+                }
+                is Byte -> {
+                    {
+                        input.toByte() < min.toByte()
+                    }
+                }
+                else -> throw IllegalArgumentException("Unsupported type ${input::class.java.simpleName}")
             }
+            errorOnFail(messageProvider(input, min), predicate)
         }
     }
 
@@ -275,16 +247,18 @@ object Rules {
      * Interval Rule, that uses internally [Min] and [Max] rules.
      *
      * @param T [Number] type.
-     * @param messageProvider Message on fail.
-     * @param rounding Decimal places scaling. See [Min] and [Max]
+     * @param messageProvider Message on fail. Lambda take Input, Min and Max values as args.
+     * @param scale Decimal places scaling. See [Min] and [Max]
      * @return Lambda that takes [Min] Number and [Max] Number as params and returns a Validation.
      */
     fun <T : Number> MinMax(
-        rounding: MathContext = MathContext.UNLIMITED,
-        messageProvider: (T, T) -> String = { min, max -> "Invalid interval [$min, $max]" }
+        scale: MathContext = MathContext.UNLIMITED,
+        messageProvider: (T, T, T) -> String = { input, min, max -> "$input must be between [$min, $max]" }
     ): (T, T) -> Validation<T> = { min, max ->
-        val message = messageProvider(min, max)
-        ComposedValidation(Min<T>(message, rounding)(min), Max<T>(message, rounding)(max))
+        ComposedValidation(
+            Min<T>(scale) { input, _ -> messageProvider(input, min, max) }(min),
+            Max<T>(scale) { input, _ -> messageProvider(input, min, max) }(max)
+        )
     }
 
     /**
