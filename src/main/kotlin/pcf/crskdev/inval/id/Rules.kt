@@ -26,7 +26,6 @@
 
 package pcf.crskdev.inval.id
 
-import pcf.crskdev.inval.id.Rules.toBigDecimalInternal
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.MathContext
@@ -84,18 +83,7 @@ object Rules {
      */
     fun <T> NotEmpty(message: String = "Field or property required"): Validation<T> =
         Validation { input ->
-            when (input) {
-                is CharSequence -> errorOnFail(message) { input.isEmpty() }
-                is Array<*> -> errorOnFail(message) { input.isEmpty() }
-                is Collection<*> -> errorOnFail(message) { input.isEmpty() }
-                is Map<*, *> -> errorOnFail(message) { input.isEmpty() }
-                else -> throw IllegalArgumentException(
-                    """
-                        Unsupported type ${input!!::class.java.simpleName}, allowed: 
-                        CharSequence, Array, Collection and Map
-                    """.trimIndent()
-                )
-            }
+            errorOnFail(message) { sizeOf(input) == 0 }
         }
 
     /**
@@ -291,7 +279,7 @@ object Rules {
      * @param T Number type.
      * @return BigDecimal.
      */
-    internal fun <T : Number> T.toBigDecimalInternal(): BigDecimal = when (this) {
+    private fun <T : Number> T.toBigDecimalInternal(): BigDecimal = when (this) {
         is Float -> this.toBigDecimal()
         is Double -> this.toBigDecimal()
         is BigDecimal -> this
@@ -302,4 +290,52 @@ object Rules {
         is Byte -> this.toInt().toBigDecimal()
         else -> throw IllegalArgumentException("Unsupported type ${this::class.java.simpleName}")
     }
+
+    /**
+     * The size of the field or property is evaluated and must match the specified boundaries.
+     *
+     * If the field or property is a String, the size of the string is evaluated.
+     *
+     * If the field or property is a Collection, the size of the Collection is evaluated.
+     *
+     * If the field or property is a Map, the size of the Map is evaluated.
+     *
+     * If the field or property is an array, the size of the array is evaluated.
+     *
+     * Use one of the optional max or min elements to specify the boundaries.
+     *
+     * @param T type.
+     * @param messageProvider Message provider on fail.
+     * @receiver Takes Input, Min, Max as args and returns the message.
+     * @return `(Int, Int) -> Validation<T>` where Min and Max are args.
+     */
+    fun <T> Size(
+        messageProvider: (T, Int, Int) -> String = { input, min, max -> "$input size be between [$min, $max]" }
+    ): (Int, Int) -> Validation<T> = { min, max ->
+        Validation { input ->
+            val size = sizeOf(input)
+            errorOnFail(messageProvider(input, min, max)) { size < min || size > max }
+        }
+    }
+
+    /**
+     *  Adapter for an object that has size/length props.
+     *
+     * @param T CharSequence, Array, Collection, Map types allowed.
+     * @param value Value.
+     * @return Int Size.
+     */
+    private fun <T> sizeOf(value: T): Int =
+        when (value) {
+            is CharSequence -> value.length
+            is Array<*> -> value.size
+            is Collection<*> -> value.size
+            is Map<*, *> -> value.size
+            else -> throw IllegalArgumentException(
+                """
+                    Unsupported type ${value!!::class.java.simpleName}, allowed: 
+                    CharSequence, Array, Collection and Map
+                """.trimIndent()
+            )
+        }
 }

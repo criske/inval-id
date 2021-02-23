@@ -38,6 +38,7 @@ import pcf.crskdev.inval.id.Rules.Min
 import pcf.crskdev.inval.id.Rules.MinMax
 import pcf.crskdev.inval.id.Rules.NotBlank
 import pcf.crskdev.inval.id.Rules.NotEmpty
+import pcf.crskdev.inval.id.Rules.Size
 import pcf.crskdev.inval.id.Rules.places
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -190,6 +191,34 @@ internal class RulesTest : DescribeSpec({
         }
         it("should apply to string numbers") {
             (DigitsStr()(3, 2) validates "120.20" withId 1)().isSuccess shouldBe true
+        }
+    }
+
+    describe("Size tests") {
+        it("should apply to string") {
+            (Size<String>()(5, 10) validates "12345" withId 1)().isSuccess shouldBe true
+            (Size<String>()(5, 10) validates "1234" withId 1)().isFailure shouldBe true
+            (Size<String>()(5, 10) validates "12345678910" withId 1)().isFailure shouldBe true
+        }
+        it("should apply to array") {
+            (Size<Array<*>>()(1, 3) validates arrayOf(1, 2, 3) withId 1)().isSuccess shouldBe true
+            (Size<Array<*>>()(1, 3) validates emptyArray<Int>() withId 1)().isFailure shouldBe true
+            (Size<Array<*>>()(1, 3) validates arrayOf(1, 2, 3, 4) withId 1)().isFailure shouldBe true
+        }
+        it("should apply to collection") {
+            (Size<List<*>>()(1, 3) validates listOf(1, 2, 3) withId 1)().isSuccess shouldBe true
+            (Size<List<*>>()(1, 3) validates emptyList<Int>() withId 1)().isFailure shouldBe true
+            (Size<List<*>>()(1, 3) validates listOf(1, 2, 3, 4) withId 1)().isFailure shouldBe true
+        }
+        it("should apply to map") {
+            (Size<Map<*, *>>()(1, 3) validates mapOf(1 to 1, 2 to 2, 3 to 3) withId 1)().isSuccess shouldBe true
+            (Size<Map<*, *>>()(1, 3) validates emptyMap<Int, Int>() withId 1)().isFailure shouldBe true
+            (Size<Map<*, *>>()(1, 3) validates mapOf(1 to 1, 2 to 2, 3 to 3, 4 to 4) withId 1)().isFailure shouldBe true
+        }
+        it("should throw when type not allowed") {
+            shouldThrow<IllegalArgumentException> {
+                (Size<Any>()(1, 3) validates Any() withId 1)()
+            }
         }
     }
 })
