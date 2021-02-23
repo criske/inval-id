@@ -30,6 +30,9 @@ import io.kotest.matchers.shouldBe
 import io.mockk.mockk
 import pcf.crskdev.inval.id.Rules.AssertFalse
 import pcf.crskdev.inval.id.Rules.AssertTrue
+import pcf.crskdev.inval.id.Rules.Digits
+import pcf.crskdev.inval.id.Rules.DigitsInt
+import pcf.crskdev.inval.id.Rules.DigitsStr
 import pcf.crskdev.inval.id.Rules.Max
 import pcf.crskdev.inval.id.Rules.Min
 import pcf.crskdev.inval.id.Rules.MinMax
@@ -169,6 +172,24 @@ internal class RulesTest : DescribeSpec({
             val minMax = MinMax<Int> { input, min, max -> "Bad input value $input. Must be between $min and $max" }
             val fail = (minMax(10, 20) validates 25 withId 1)().exceptionOrNull()!! as ValidationException
             fail.errors.first().message shouldBe "Bad input value 25. Must be between 10 and 20"
+        }
+    }
+
+    describe("Digits tests") {
+        it("should apply to int") {
+            (Digits<Int>()(3, 0) validates 10 withId 1)().isFailure shouldBe true
+            (Digits<Int>()(3, 0) validates 100 withId 1)().isSuccess shouldBe true
+            (DigitsInt()(3) validates 120 withId 1)().isSuccess shouldBe true
+            (DigitsInt()(3) validates 12 withId 1)().isFailure shouldBe true
+        }
+        it("should apply to floats/doubles") {
+            (Digits<Double>()(3, 2) validates 103.22 withId 1)().isSuccess shouldBe true
+            (Digits<Float>()(3, 2) validates 10.202f withId 1)().isFailure shouldBe true
+            (Digits<Float>()(3, 2) validates 100.22f withId 1)().isSuccess shouldBe true
+            (Digits<Float>()(1, 5) validates 1.12345f withId 1)().isSuccess shouldBe true
+        }
+        it("should apply to string numbers") {
+            (DigitsStr()(3, 2) validates "120.20" withId 1)().isSuccess shouldBe true
         }
     }
 })

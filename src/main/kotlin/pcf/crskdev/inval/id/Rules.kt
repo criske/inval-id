@@ -26,10 +26,12 @@
 
 package pcf.crskdev.inval.id
 
+import pcf.crskdev.inval.id.Rules.toBigDecimalInternal
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.MathContext
 import java.math.RoundingMode
+import kotlin.math.abs
 
 /**
  * Built-in validation rules offered by inval-id that
@@ -121,53 +123,11 @@ object Rules {
         messageProvider: (T, T) -> String = { input, max -> "Input $input must be at most $max." }
     ): (T) -> Validation<T> = { max ->
         Validation { input ->
-            val predicate: (T) -> Boolean = when (input) {
-                is Float -> {
-                    {
-                        input.toBigDecimal().setScale(scale.precision, scale.roundingMode) > max.toFloat()
-                            .toBigDecimal()
-                            .setScale(scale.precision, scale.roundingMode)
-                    }
-                }
-                is Double -> {
-                    {
-                        input.toBigDecimal().setScale(scale.precision, scale.roundingMode) > max.toDouble()
-                            .toBigDecimal()
-                            .setScale(scale.precision, scale.roundingMode)
-                    }
-                }
-                is BigDecimal -> {
-                    {
-                        input.setScale(scale.precision, scale.roundingMode) > (max as BigDecimal)
-                            .setScale(scale.precision, scale.roundingMode)
-                    }
-                }
-                is BigInteger -> {
-                    {
-                        input > max as BigInteger
-                    }
-                }
-                is Int -> {
-                    {
-                        input.toInt() > max.toInt()
-                    }
-                }
-                is Long -> {
-                    {
-                        input.toLong() > max.toLong()
-                    }
-                }
-                is Short -> {
-                    {
-                        input.toShort() > max.toShort()
-                    }
-                }
-                is Byte -> {
-                    {
-                        input.toByte() > max.toByte()
-                    }
-                }
-                else -> throw IllegalArgumentException("Unsupported type ${input::class.java.simpleName}")
+            val predicate: (T) -> Boolean = {
+                input
+                    .toBigDecimalInternal()
+                    .setScale(scale.precision, scale.roundingMode) > max.toBigDecimalInternal()
+                    .setScale(scale.precision, scale.roundingMode)
             }
             errorOnFail(messageProvider(input, max), predicate)
         }
@@ -197,53 +157,11 @@ object Rules {
         messageProvider: (T, T) -> String = { input, min -> "Input $input must be at least $min." }
     ): (T) -> Validation<T> = { min ->
         Validation { input ->
-            val predicate: (T) -> Boolean = when (input) {
-                is Float -> {
-                    {
-                        input.toBigDecimal().setScale(scale.precision, scale.roundingMode) < min.toFloat()
-                            .toBigDecimal()
-                            .setScale(scale.precision, scale.roundingMode)
-                    }
-                }
-                is Double -> {
-                    {
-                        input.toBigDecimal().setScale(scale.precision, scale.roundingMode) < min.toDouble()
-                            .toBigDecimal()
-                            .setScale(scale.precision, scale.roundingMode)
-                    }
-                }
-                is BigDecimal -> {
-                    {
-                        input.setScale(scale.precision, scale.roundingMode) < (min as BigDecimal)
-                            .setScale(scale.precision, scale.roundingMode)
-                    }
-                }
-                is BigInteger -> {
-                    {
-                        input < min as BigInteger
-                    }
-                }
-                is Int -> {
-                    {
-                        input.toInt() < min.toInt()
-                    }
-                }
-                is Long -> {
-                    {
-                        input.toLong() < min.toLong()
-                    }
-                }
-                is Short -> {
-                    {
-                        input.toShort() < min.toShort()
-                    }
-                }
-                is Byte -> {
-                    {
-                        input.toByte() < min.toByte()
-                    }
-                }
-                else -> throw IllegalArgumentException("Unsupported type ${input::class.java.simpleName}")
+            val predicate: (T) -> Boolean = {
+                input
+                    .toBigDecimalInternal()
+                    .setScale(scale.precision, scale.roundingMode) < min.toBigDecimalInternal()
+                    .setScale(scale.precision, scale.roundingMode)
             }
             errorOnFail(messageProvider(input, min), predicate)
         }
@@ -268,6 +186,92 @@ object Rules {
     }
 
     /**
+     * The value of the field or property must be a number within a specified range. The integer element specifies
+     * the maximum integral digits for the number, and the fraction element specifies the maximum fractional
+     * digits for the number.
+     *
+     * Example:
+     *
+     * _Digits<Double>()(3, 2) validates 120,32 withId 1_ passes
+     *
+     * _Digits<Double>()(3, 2) validates 12,32 withId 1_ fails
+     *
+     * See also : [DigitsInt], [DigitsStr]
+     *
+     * @param T Number Type.
+     * @param messageProvider Message provider on fail.
+     * @receiver Takes Input, Digits and Fractions as args and returns the message.
+     * @return `(Int, Int) -> Validation` that takes Digits and Fractions as args.
+     */
+    fun <T : Number> Digits(
+        messageProvider: (T, Int, Int) -> String = { input, integers, fractions -> "$input number must have $integers digits and $fractions fractions" }
+    ): (Int, Int) -> Validation<T> = { integers, fractions ->
+        Validation { input ->
+            errorOnFail(messageProvider(input, integers, fractions)) {
+                val inputBd = input.toBigDecimalInternal()
+                abs(inputBd.precision() - inputBd.scale()) != integers || inputBd.scale() != fractions
+            }
+        }
+    }
+
+    /**
+     * The value of the field or property must be a number within a specified range. The integer element specifies
+     * the maximum integral digits for the number, and the fraction element specifies the maximum fractional
+     * digits for the number.
+     *
+     * It assumes that that the string input is a number representation.
+     *
+     * This rule is useful when it applies to numbers that need to retain the fractional trailing zeros.
+     *
+     * Example:
+     *
+     * _DigitsStr()(3, 2) validates "120.30" withId 1_ passes
+     *
+     * but
+     *
+     * _Digits<Double>()(3, 2) validates 120.30 withId 1_ fails because the trailing zero is ignored and is interpreted
+     * as having one decimal.
+     *
+     * See also : [Digits],  [DigitsInt]
+     *
+     * @param messageProvider Message provider on fail.
+     * @receiver Takes Input, Digits and Fractions as args and returns the message.
+     * @return `(Int, Int) -> Validation` that takes Digits and Fractions as args.
+     */
+    fun DigitsStr(
+        messageProvider: (String, Int, Int) -> String = { input, integers, fractions -> "$input number must have $integers digits and $fractions fractions" }
+    ): (Int, Int) -> Validation<String> = { integers, fractions ->
+        Validation { input ->
+            errorOnFail(messageProvider(input, integers, fractions)) {
+                val inputBd = BigDecimal(input)
+                abs(inputBd.precision() - inputBd.scale()) != integers || inputBd.scale() != fractions
+            }
+        }
+    }
+
+    /**
+     * Convenience for `Digits<Int>(digits, 0)`.
+     *
+     * The value of the field or property must be an int number within a specified range. The integer element specifies
+     * the maximum integral digits for the number.
+     *
+     * Example:
+     *
+     * _DigitsInt()(3) validates 120 withId 1_ passes
+     *
+     * _DigitsInt()(3) validates 12 withId 1_ fails
+     *
+     * @param messageProvider Message provider on fail.
+     * @receiver Takes Input and Digits as args and returns the message.
+     * @return `(Int -> Validation` that takes Digits as arg.
+     */
+    fun DigitsInt(
+        messageProvider: (Int, Int) -> String = { input, integers -> "$input number must have $integers digits" }
+    ): (Int) -> Validation<Int> = { integers ->
+        Digits<Int> { input, _, _ -> messageProvider(input, integers) }(integers, 0)
+    }
+
+    /**
      * Handy extension to create a [MathContext] used by [Min] and [Max] for decimal scaling when dealing with
      * fraction inputs.
      *
@@ -280,4 +284,22 @@ object Rules {
      * @param roundingMode [RoundingMode] strategy.
      */
     fun Int.places(roundingMode: RoundingMode = RoundingMode.HALF_UP) = MathContext(this, roundingMode)
+
+    /**
+     * Number to big decimal.
+     *
+     * @param T Number type.
+     * @return BigDecimal.
+     */
+    internal fun <T : Number> T.toBigDecimalInternal(): BigDecimal = when (this) {
+        is Float -> this.toBigDecimal()
+        is Double -> this.toBigDecimal()
+        is BigDecimal -> this
+        is BigInteger -> BigDecimal(this)
+        is Int -> this.toBigDecimal()
+        is Long -> this.toBigDecimal()
+        is Short -> this.toInt().toBigDecimal()
+        is Byte -> this.toInt().toBigDecimal()
+        else -> throw IllegalArgumentException("Unsupported type ${this::class.java.simpleName}")
+    }
 }
