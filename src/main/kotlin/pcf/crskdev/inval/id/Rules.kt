@@ -365,9 +365,8 @@ object Rules {
      */
     fun PositiveOrZero(messageProvider: (Number) -> String = { input -> "$input should be positive" }): Validation<Number> =
         Validation { input ->
-            errorOnFail(messageProvider(input)) { input.toBigDecimalInternal() < BigDecimal.ZERO}
+            errorOnFail(messageProvider(input)) { input.toBigDecimalInternal() < BigDecimal.ZERO }
         }
-
 
     /**
      * The value of the field or property must be a positive number.
@@ -378,7 +377,7 @@ object Rules {
      */
     fun Positive(messageProvider: (Number) -> String = { input -> "$input should be positive" }): Validation<Number> =
         Validation { input ->
-            errorOnFail(messageProvider(input)) { input.toBigDecimalInternal() < BigDecimal.ONE}
+            errorOnFail(messageProvider(input)) { input.toBigDecimalInternal() < BigDecimal.ONE }
         }
 
     /**
@@ -419,5 +418,4 @@ object Rules {
         is Byte -> this.toInt().toBigDecimal()
         else -> throw IllegalArgumentException("Unsupported type ${this::class.java.simpleName}")
     }
-
 }

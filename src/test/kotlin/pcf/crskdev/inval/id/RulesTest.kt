@@ -293,7 +293,7 @@ internal class RulesTest : DescribeSpec({
         }
     }
 
-    describe("Positive tests"){
+    describe("Positive tests") {
         it("should apply positive to number") {
             (Positive() validates 1 withId 1)().isSuccess shouldBe true
             (Positive() validates 1.0 withId 1)().isSuccess shouldBe true
