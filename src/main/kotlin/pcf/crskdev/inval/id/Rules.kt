@@ -347,7 +347,7 @@ object Rules {
                 ComposedValidation(
                     Validation { input ->
                         val at = input.lastIndexOf("@")
-                        //error if local-part is longer than 64 characters
+                        // error if local-part is longer than 64 characters
                         if (at > 0 && input.subSequence(0, at).length > 64) {
                             error(messageProvider(input, regex))
                         }
