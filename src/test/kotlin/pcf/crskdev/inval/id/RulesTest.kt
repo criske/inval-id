@@ -39,6 +39,8 @@ import pcf.crskdev.inval.id.Rules.Min
 import pcf.crskdev.inval.id.Rules.MinMax
 import pcf.crskdev.inval.id.Rules.NotBlank
 import pcf.crskdev.inval.id.Rules.NotEmpty
+import pcf.crskdev.inval.id.Rules.Positive
+import pcf.crskdev.inval.id.Rules.PositiveOrZero
 import pcf.crskdev.inval.id.Rules.Size
 import pcf.crskdev.inval.id.Rules.places
 import java.math.BigDecimal
@@ -288,6 +290,23 @@ internal class RulesTest : DescribeSpec({
             check("just\"not\"right@example.com")
             check("A@b@c@example.com")
             check("1234567890123456789012345678901234567890123456789012345678901234+x@example.com")
+        }
+    }
+
+    describe("Positive tests"){
+        it("should apply positive to number") {
+            (Positive() validates 1 withId 1)().isSuccess shouldBe true
+            (Positive() validates 1.0 withId 1)().isSuccess shouldBe true
+            (Positive() validates 1.0f withId 1)().isSuccess shouldBe true
+            (Positive() validates BigDecimal.ONE withId 1)().isSuccess shouldBe true
+            (Positive() validates 0 withId 1)().isFailure shouldBe true
+        }
+        it("should apply positive or zero to number") {
+            (PositiveOrZero() validates 0 withId 1)().isSuccess shouldBe true
+            (PositiveOrZero() validates 0.0 withId 1)().isSuccess shouldBe true
+            (PositiveOrZero() validates 0.0f withId 1)().isSuccess shouldBe true
+            (PositiveOrZero() validates BigDecimal.ZERO withId 1)().isSuccess shouldBe true
+            (PositiveOrZero() validates -1 withId 1)().isFailure shouldBe true
         }
     }
 })

@@ -357,6 +357,31 @@ object Rules {
             }
 
     /**
+     * The value of the field or property must be a positive or zero number.
+     *
+     * @param messageProvider Message provider.
+     * @receiver Takes input Number as arg.
+     * @return Validation<Number>.
+     */
+    fun PositiveOrZero(messageProvider: (Number) -> String = { input -> "$input should be positive" }): Validation<Number> =
+        Validation { input ->
+            errorOnFail(messageProvider(input)) { input.toBigDecimalInternal() < BigDecimal.ZERO}
+        }
+
+
+    /**
+     * The value of the field or property must be a positive number.
+     *
+     * @param messageProvider Message provider.
+     * @receiver Takes input Number as arg.
+     * @return Validation<Number>.
+     */
+    fun Positive(messageProvider: (Number) -> String = { input -> "$input should be positive" }): Validation<Number> =
+        Validation { input ->
+            errorOnFail(messageProvider(input)) { input.toBigDecimalInternal() < BigDecimal.ONE}
+        }
+
+    /**
      *  Adapter for an object that has size/length props.
      *
      * @param T CharSequence, Array, Collection, Map types allowed.
@@ -394,4 +419,5 @@ object Rules {
         is Byte -> this.toInt().toBigDecimal()
         else -> throw IllegalArgumentException("Unsupported type ${this::class.java.simpleName}")
     }
+
 }
