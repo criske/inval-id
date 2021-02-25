@@ -226,6 +226,8 @@ internal class RulesTest : DescribeSpec({
     describe("Pattern test") {
         it("should apply to regex pattern") {
             (Rules.Pattern()("\\d+") validates "12435" withId 1)().isSuccess shouldBe true
+            (Rules.Pattern(RegexOption.IGNORE_CASE)("\\d+") validates "12435" withId 1)().isSuccess shouldBe true
+            (Rules.Pattern(RegexOption.IGNORE_CASE, RegexOption.COMMENTS)("\\d+") validates "12435" withId 1)().isSuccess shouldBe true
             (Rules.Pattern()("\\d+") validates "12435f" withId 1)().isFailure shouldBe true
         }
     }

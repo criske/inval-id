@@ -309,13 +309,13 @@ object Rules {
      * @return (String) -> Validation where regex expression is taken as arg.
      */
     fun Pattern(
-        options: Set<RegexOption> = emptySet(),
+        vararg options: RegexOption,
         messageProvider: (CharSequence, String) -> String = { input, expression -> "$expression is not matching $input" }
     ): (String) -> Validation<CharSequence> = { expression ->
         val regex = when {
             options.isEmpty() -> expression.toRegex()
             options.size == 1 -> expression.toRegex(options.first())
-            else -> expression.toRegex(options)
+            else -> expression.toRegex(options.toSet())
         }
         Validation { input ->
             errorOnFail(messageProvider(input, expression)) {
