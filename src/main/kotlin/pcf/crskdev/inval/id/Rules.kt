@@ -325,6 +325,38 @@ object Rules {
     }
 
     /**
+     * The value of the field or property must be a valid email address.
+     *
+     * It uses [Pattern] internally.
+     *
+     * @param messageProvider Message provider.
+     * @receiver Takes input and the regex email as args.
+     * @return Validation<CharSequence>.
+     */
+    fun Email(messageProvider: (CharSequence, String) -> String = { input, _ -> "$input is invalid e-mail." }): Validation<CharSequence> =
+        """
+(?:[a-z0-9!#${'$'}%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#${'$'}%&'*+/=?^_`{|}~-]+)*|"
+(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")
+@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9]
+(?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}
+(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:
+(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])
+        """.trimIndent()
+            .replace("\n", "")
+            .let { regex ->
+                ComposedValidation(
+                    Validation { input ->
+                        val at = input.lastIndexOf("@")
+                        //error if local-part is longer than 64 characters
+                        if (at > 0 && input.subSequence(0, at).length > 64) {
+                            error(messageProvider(input, regex))
+                        }
+                    },
+                    Pattern(RegexOption.IGNORE_CASE, messageProvider = messageProvider)(regex)
+                )
+            }
+
+    /**
      *  Adapter for an object that has size/length props.
      *
      * @param T CharSequence, Array, Collection, Map types allowed.
