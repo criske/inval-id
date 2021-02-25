@@ -37,6 +37,8 @@ import pcf.crskdev.inval.id.Rules.Email
 import pcf.crskdev.inval.id.Rules.Max
 import pcf.crskdev.inval.id.Rules.Min
 import pcf.crskdev.inval.id.Rules.MinMax
+import pcf.crskdev.inval.id.Rules.Negative
+import pcf.crskdev.inval.id.Rules.NegativeOrZero
 import pcf.crskdev.inval.id.Rules.NotBlank
 import pcf.crskdev.inval.id.Rules.NotEmpty
 import pcf.crskdev.inval.id.Rules.Positive
@@ -307,6 +309,23 @@ internal class RulesTest : DescribeSpec({
             (PositiveOrZero() validates 0.0f withId 1)().isSuccess shouldBe true
             (PositiveOrZero() validates BigDecimal.ZERO withId 1)().isSuccess shouldBe true
             (PositiveOrZero() validates -1 withId 1)().isFailure shouldBe true
+        }
+    }
+
+    describe("Negative tests") {
+        it("should apply negative to number") {
+            (Negative() validates -1 withId 1)().isSuccess shouldBe true
+            (Negative() validates -1.0 withId 1)().isSuccess shouldBe true
+            (Negative() validates -1.0f withId 1)().isSuccess shouldBe true
+            (Negative() validates BigDecimal.valueOf(-1) withId 1)().isSuccess shouldBe true
+            (Negative() validates 0 withId 1)().isFailure shouldBe true
+        }
+        it("should apply negative or zero to number") {
+            (NegativeOrZero() validates 0 withId 1)().isSuccess shouldBe true
+            (NegativeOrZero() validates 0.0 withId 1)().isSuccess shouldBe true
+            (NegativeOrZero() validates 0.0f withId 1)().isSuccess shouldBe true
+            (NegativeOrZero() validates BigDecimal.ZERO withId 1)().isSuccess shouldBe true
+            (NegativeOrZero() validates 1 withId 1)().isFailure shouldBe true
         }
     }
 })

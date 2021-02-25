@@ -357,27 +357,51 @@ object Rules {
             }
 
     /**
-     * The value of the field or property must be a positive or zero number.
-     *
-     * @param messageProvider Message provider.
-     * @receiver Takes input Number as arg.
-     * @return Validation<Number>.
-     */
-    fun PositiveOrZero(messageProvider: (Number) -> String = { input -> "$input should be positive" }): Validation<Number> =
-        Validation { input ->
-            errorOnFail(messageProvider(input)) { input.toBigDecimalInternal() < BigDecimal.ZERO }
-        }
-
-    /**
      * The value of the field or property must be a positive number.
      *
      * @param messageProvider Message provider.
      * @receiver Takes input Number as arg.
      * @return Validation<Number>.
      */
-    fun Positive(messageProvider: (Number) -> String = { input -> "$input should be positive" }): Validation<Number> =
+    fun Positive(messageProvider: (Number) -> String = { input -> "$input should be positive." }): Validation<Number> =
         Validation { input ->
             errorOnFail(messageProvider(input)) { input.toBigDecimalInternal() < BigDecimal.ONE }
+        }
+
+    /**
+     * The value of the field or property must be a positive or zero number.
+     *
+     * @param messageProvider Message provider.
+     * @receiver Takes input Number as arg.
+     * @return Validation<Number>.
+     */
+    fun PositiveOrZero(messageProvider: (Number) -> String = { input -> "$input should be positive or zero." }): Validation<Number> =
+        Validation { input ->
+            errorOnFail(messageProvider(input)) { input.toBigDecimalInternal() < BigDecimal.ZERO }
+        }
+
+    /**
+     * The value of the field or property must be a negative number.
+     *
+     * @param messageProvider Message provider.
+     * @receiver Takes input Number as arg.
+     * @return Validation<Number>.
+     */
+    fun Negative(messageProvider: (Number) -> String = { input -> "$input should be negative." }): Validation<Number> =
+        Validation { input ->
+            errorOnFail(messageProvider(input)) { input.toBigDecimalInternal() > BigDecimal.valueOf(-1) }
+        }
+
+    /**
+     * The value of the field or property must be a negative or zero number.
+     *
+     * @param messageProvider Message provider.
+     * @receiver Takes input Number as arg.
+     * @return Validation<Number>.
+     */
+    fun NegativeOrZero(messageProvider: (Number) -> String = { input -> "$input should be negative or zero." }): Validation<Number> =
+        Validation { input ->
+            errorOnFail(messageProvider(input)) { input.toBigDecimalInternal() > BigDecimal.ZERO }
         }
 
     /**
