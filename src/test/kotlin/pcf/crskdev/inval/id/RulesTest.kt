@@ -33,6 +33,7 @@ import pcf.crskdev.inval.id.Rules.AssertTrue
 import pcf.crskdev.inval.id.Rules.Digits
 import pcf.crskdev.inval.id.Rules.DigitsInt
 import pcf.crskdev.inval.id.Rules.DigitsStr
+import pcf.crskdev.inval.id.Rules.Email
 import pcf.crskdev.inval.id.Rules.Max
 import pcf.crskdev.inval.id.Rules.Min
 import pcf.crskdev.inval.id.Rules.MinMax
@@ -42,7 +43,6 @@ import pcf.crskdev.inval.id.Rules.Size
 import pcf.crskdev.inval.id.Rules.places
 import java.math.BigDecimal
 import java.math.BigInteger
-import java.util.regex.Pattern
 
 internal class RulesTest : DescribeSpec({
 
@@ -229,6 +229,65 @@ internal class RulesTest : DescribeSpec({
             (Rules.Pattern(RegexOption.IGNORE_CASE)("\\d+") validates "12435" withId 1)().isSuccess shouldBe true
             (Rules.Pattern(RegexOption.IGNORE_CASE, RegexOption.COMMENTS)("\\d+") validates "12435" withId 1)().isSuccess shouldBe true
             (Rules.Pattern()("\\d+") validates "12435f" withId 1)().isFailure shouldBe true
+        }
+    }
+
+    describe("Email test") {
+
+        val email = Email()
+
+        it("should apply email regex and be valid") {
+            val check: (CharSequence) -> Unit = {
+                (email validates it withId 1)().isSuccess shouldBe true
+            }
+            check("email@example.com")
+            check("firstname.lastname@example.com")
+            check("email@subdomain.example.com")
+            check("firstname+lastname@example.com")
+            check("email@123.123.123.123")
+            check("email@[123.123.123.123]")
+            check("\"email\"@example.com")
+            check("1234567890@example.com")
+            check("email@example-one.com")
+            check("_______@example.com")
+            check("email@example.name")
+            check("email@example.museum")
+            check("email@example.co.jp")
+            check("firstname-lastname@example.com")
+            check("mailhost!username@example.org")
+            check("\"john..doe\"@example.org")
+            check("user%example.com@example.org")
+        }
+
+        it("should apply email regex and be invalid") {
+            val check: (CharSequence) -> Unit = {
+                (email validates it withId 1)().isFailure shouldBe true
+            }
+            check("#@%^%#\$@#\$@#.com")
+            check("@example.com")
+            check("Joe Smith <email@example.com>")
+            check("email.example.com")
+            check("email@example@example.com")
+            check(".email@example.com")
+            check("email.@example.com")
+            check("email..email@example.com")
+            check("あいうえお@example.com")
+            check("email@example.com (Joe Smith)")
+            check("email@example")
+            check("email@-example.com")
+            check("email@example..com")
+            check("Abc..123@example.com")
+            check("\"(),:;<>[\\]@example.com")
+            check("just”not”right@example.com")
+            check("this\\ is\"really\"not\\allowed@example.com")
+            check("i_like_underscore@but_its_not_allowed_in_this_part.example.com")
+            check("this is\"not\\allowed@example.com")
+            check("a\"b(c)d,e:f;g<h>i[j\\k]l@example.com")
+            check("this is\"not\\allowed@example.com")
+            check("this\\ still\\\"not\\\\allowed@example.co")
+            check("just\"not\"right@example.com")
+            check("A@b@c@example.com")
+            check("1234567890123456789012345678901234567890123456789012345678901234+x@example.com")
         }
     }
 })
