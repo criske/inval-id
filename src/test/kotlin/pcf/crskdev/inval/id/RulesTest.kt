@@ -42,6 +42,7 @@ import pcf.crskdev.inval.id.Rules.Size
 import pcf.crskdev.inval.id.Rules.places
 import java.math.BigDecimal
 import java.math.BigInteger
+import java.util.regex.Pattern
 
 internal class RulesTest : DescribeSpec({
 
@@ -219,6 +220,15 @@ internal class RulesTest : DescribeSpec({
             shouldThrow<IllegalArgumentException> {
                 (Size<Any>()(1, 3) validates Any() withId 1)()
             }
+        }
+    }
+
+    describe("Pattern test") {
+        it("should apply to regex pattern") {
+            (Rules.Pattern()("\\d+") validates "12435" withId 1)().isSuccess shouldBe true
+            (Rules.Pattern(RegexOption.IGNORE_CASE)("\\d+") validates "12435" withId 1)().isSuccess shouldBe true
+            (Rules.Pattern(RegexOption.IGNORE_CASE, RegexOption.COMMENTS)("\\d+") validates "12435" withId 1)().isSuccess shouldBe true
+            (Rules.Pattern()("\\d+") validates "12435f" withId 1)().isFailure shouldBe true
         }
     }
 })

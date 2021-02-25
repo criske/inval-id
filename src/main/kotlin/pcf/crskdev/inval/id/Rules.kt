@@ -274,24 +274,6 @@ object Rules {
     fun Int.places(roundingMode: RoundingMode = RoundingMode.HALF_UP) = MathContext(this, roundingMode)
 
     /**
-     * Number to big decimal.
-     *
-     * @param T Number type.
-     * @return BigDecimal.
-     */
-    private fun <T : Number> T.toBigDecimalInternal(): BigDecimal = when (this) {
-        is Float -> this.toBigDecimal()
-        is Double -> this.toBigDecimal()
-        is BigDecimal -> this
-        is BigInteger -> BigDecimal(this)
-        is Int -> this.toBigDecimal()
-        is Long -> this.toBigDecimal()
-        is Short -> this.toInt().toBigDecimal()
-        is Byte -> this.toInt().toBigDecimal()
-        else -> throw IllegalArgumentException("Unsupported type ${this::class.java.simpleName}")
-    }
-
-    /**
      * The size of the field or property is evaluated and must match the specified boundaries.
      *
      * If the field or property is a String, the size of the string is evaluated.
@@ -319,6 +301,30 @@ object Rules {
     }
 
     /**
+     * The value of the field or property must match the regular expression defined in the regexp element.
+     *
+     * @param options [RegexOption] set.
+     * @param messageProvider Message provider.
+     * @receiver Takes input and the regex expression as args.
+     * @return (String) -> Validation where regex expression is taken as arg.
+     */
+    fun Pattern(
+        vararg options: RegexOption,
+        messageProvider: (CharSequence, String) -> String = { input, expression -> "$expression is not matching $input" }
+    ): (String) -> Validation<CharSequence> = { expression ->
+        val regex = when {
+            options.isEmpty() -> expression.toRegex()
+            options.size == 1 -> expression.toRegex(options.first())
+            else -> expression.toRegex(options.toSet())
+        }
+        Validation { input ->
+            errorOnFail(messageProvider(input, expression)) {
+                !regex.matches(input)
+            }
+        }
+    }
+
+    /**
      *  Adapter for an object that has size/length props.
      *
      * @param T CharSequence, Array, Collection, Map types allowed.
@@ -338,4 +344,22 @@ object Rules {
                 """.trimIndent()
             )
         }
+
+    /**
+     * Number to big decimal.
+     *
+     * @param T Number type.
+     * @return BigDecimal.
+     */
+    private fun <T : Number> T.toBigDecimalInternal(): BigDecimal = when (this) {
+        is Float -> this.toBigDecimal()
+        is Double -> this.toBigDecimal()
+        is BigDecimal -> this
+        is BigInteger -> BigDecimal(this)
+        is Int -> this.toBigDecimal()
+        is Long -> this.toBigDecimal()
+        is Short -> this.toInt().toBigDecimal()
+        is Byte -> this.toInt().toBigDecimal()
+        else -> throw IllegalArgumentException("Unsupported type ${this::class.java.simpleName}")
+    }
 }
