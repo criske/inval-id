@@ -30,6 +30,7 @@ import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.MathContext
 import java.math.RoundingMode
+import java.util.Date
 import kotlin.math.abs
 
 /**
@@ -403,6 +404,74 @@ object Rules {
         Validation { input ->
             errorOnFail(messageProvider(input)) { input.toBigDecimalInternal() > BigDecimal.ZERO }
         }
+
+    /**
+     * The value of the field or property must be a date in the past.
+     *
+     * @param nowProvider Now Date provider.
+     * @receiver Provides current Date.
+     * @param messageProvider Message Provider.
+     * @receiver Takes input and now date reference as args.
+     * @return Validation<Date>.
+     */
+    fun Past(
+        nowProvider: () -> Date = { Date() },
+        messageProvider: (Date, Date) -> String = { input, now -> "$input must be before $now" }
+    ): Validation<Date> = Validation { input ->
+        val now = nowProvider()
+        errorOnFail(messageProvider(input, now)) { input == now || input.after(now) }
+    }
+
+    /**
+     *The value of the field or property must be a date or time in the past or present.
+     *
+     * @param nowProvider Now Date provider.
+     * @receiver Provides current Date.
+     * @param messageProvider Message Provider.
+     * @receiver Takes input and now date reference as args.
+     * @return Validation<Date>.
+     */
+    fun PastOrPresent(
+        nowProvider: () -> Date = { Date() },
+        messageProvider: (Date, Date) -> String = { input, now -> "$input must be before or same as $now" }
+    ): Validation<Date> = Validation { input ->
+        val now = nowProvider()
+        errorOnFail(messageProvider(input, now)) { input.after(now) }
+    }
+
+    /**
+     * The value of the field or property must be a date in the future.
+     *
+     * @param nowProvider Now Date provider.
+     * @receiver Provides current Date.
+     * @param messageProvider Message Provider.
+     * @receiver Takes input and now date reference as args.
+     * @return Validation<Date>.
+     */
+    fun Future(
+        nowProvider: () -> Date = { Date() },
+        messageProvider: (Date, Date) -> String = { input, now -> "$input must be after $now" }
+    ): Validation<Date> = Validation { input ->
+        val now = nowProvider()
+        errorOnFail(messageProvider(input, now)) { input == now || input.before(now) }
+    }
+
+    /**
+     *The value of the field or property must be a date or time in the future or present.
+     *
+     * @param nowProvider Now Date provider.
+     * @receiver Provides current Date.
+     * @param messageProvider Message Provider.
+     * @receiver Takes input and now date reference as args.
+     * @return Validation<Date>.
+     */
+    fun FutureOrPresent(
+        nowProvider: () -> Date = { Date() },
+        messageProvider: (Date, Date) -> String = { input, now -> "$input must be after or same as $now" }
+    ): Validation<Date> = Validation { input ->
+        val now = nowProvider()
+        errorOnFail(messageProvider(input, now)) { input.before(now) }
+    }
 
     /**
      *  Adapter for an object that has size/length props.
