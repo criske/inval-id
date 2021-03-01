@@ -68,7 +68,7 @@ val accountRule = ObjectValidation<Account> { account ->
  }
 ```
 
-### Creating a validation input
+#### Creating a validation input
 There are two ways:
 ```kotlin
  val input = Input("email".toId(), email, Rules.NotBlank(), Rules.Email())
