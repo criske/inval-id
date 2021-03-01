@@ -65,3 +65,16 @@ val accountRule = ObjectValidation<Account> { account ->
    } validates account.info withId "info"
  }
 ```
+
+### Creating a validation input
+```kotlin
+ val input = Input("email".toId(), email, Rules.NotBlank(), Rules.NotBlank())
+```
+or
+```kotlin
+val input = ComposedValidation(Rules.NotBlank(), Rules.Email()) validates account.email withId "email"
+```
+Bypassing validation
+```kotlin
+val input = Input.byPass(email)
+```
