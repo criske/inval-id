@@ -69,7 +69,7 @@ val accountRule = ObjectValidation<Account> { account ->
 ### Creating a validation input
 There are two ways:
 ```kotlin
- val input = Input("email".toId(), email, Rules.NotBlank(), Rules.NotBlank())
+ val input = Input("email".toId(), email, Rules.NotBlank(), Rules.Email())
  val input = ComposedValidation(Rules.NotBlank(), Rules.Email()) validates email withId "email"
 ```
 Bypassing validation:
