@@ -1,4 +1,4 @@
-[![codecov.io](https://codecov.io/github/criske/inval-id/coverage.svg?branch=master)](https://codecov.io/github/criske/inval-id)
+[![codecov](https://codecov.io/gh/criske/inval-id/branch/main/graph/badge.svg?token=YFSEQZ2LQ2)](https://codecov.io/gh/criske/inval-id)
 # inval-id
 
 Simple and lightweight library for input validation written in Kotlin. Core concept is reusable and composable validation rules.
