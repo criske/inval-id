@@ -9,7 +9,7 @@ Simple and lightweight library for input validation written in Kotlin. Core conc
 val notBlankRule = Validation<String> { input ->
    errorOnFail("Input must not be blank") { input.isBlank() } 
 }
-val passwordRule = Validation<String> {
+val passwordRule = Validation<String> { input ->
    errorOnFail("Password must have length of at least 8") { input.length < 8 } 
 }
 
