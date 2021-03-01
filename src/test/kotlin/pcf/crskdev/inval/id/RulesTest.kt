@@ -28,12 +28,18 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.matchers.shouldBe
 import io.mockk.mockk
+import java.math.BigDecimal
+import java.math.BigInteger
+import java.util.Calendar
+import java.util.Date
 import pcf.crskdev.inval.id.Rules.AssertFalse
 import pcf.crskdev.inval.id.Rules.AssertTrue
 import pcf.crskdev.inval.id.Rules.Digits
 import pcf.crskdev.inval.id.Rules.DigitsInt
 import pcf.crskdev.inval.id.Rules.DigitsStr
 import pcf.crskdev.inval.id.Rules.Email
+import pcf.crskdev.inval.id.Rules.Future
+import pcf.crskdev.inval.id.Rules.FutureOrPresent
 import pcf.crskdev.inval.id.Rules.Max
 import pcf.crskdev.inval.id.Rules.Min
 import pcf.crskdev.inval.id.Rules.MinMax
@@ -41,12 +47,12 @@ import pcf.crskdev.inval.id.Rules.Negative
 import pcf.crskdev.inval.id.Rules.NegativeOrZero
 import pcf.crskdev.inval.id.Rules.NotBlank
 import pcf.crskdev.inval.id.Rules.NotEmpty
+import pcf.crskdev.inval.id.Rules.Past
+import pcf.crskdev.inval.id.Rules.PastOrPresent
 import pcf.crskdev.inval.id.Rules.Positive
 import pcf.crskdev.inval.id.Rules.PositiveOrZero
 import pcf.crskdev.inval.id.Rules.Size
 import pcf.crskdev.inval.id.Rules.places
-import java.math.BigDecimal
-import java.math.BigInteger
 
 internal class RulesTest : DescribeSpec({
 
@@ -326,6 +332,39 @@ internal class RulesTest : DescribeSpec({
             (NegativeOrZero() validates 0.0f withId 1)().isSuccess shouldBe true
             (NegativeOrZero() validates BigDecimal.ZERO withId 1)().isSuccess shouldBe true
             (NegativeOrZero() validates 1 withId 1)().isFailure shouldBe true
+        }
+    }
+
+    describe("Dates tests") {
+        val now = Date()
+        fun Date.add(field: Int, amount: Int): Date =
+            Calendar.getInstance().run {
+                add(field, amount)
+                return time
+            }
+
+        it("should apply past rule date") {
+            (Past({ now }) validates now.add(Calendar.DAY_OF_MONTH, -2) withId 1)().isSuccess shouldBe true
+            (Past({ now }) validates now.add(Calendar.DAY_OF_MONTH, 2) withId 1)().isFailure shouldBe true
+            (Past({ now }) validates now withId 1)().isFailure shouldBe true
+        }
+
+        it("should apply past or present rule date") {
+            (PastOrPresent({ now }) validates now.add(Calendar.DAY_OF_MONTH, -2) withId 1)().isSuccess shouldBe true
+            (PastOrPresent({ now }) validates now.add(Calendar.DAY_OF_MONTH, 2) withId 1)().isFailure shouldBe true
+            (PastOrPresent({ now }) validates now withId 1)().isSuccess shouldBe true
+        }
+
+        it("should apply future rule date") {
+            (Future({ now }) validates now.add(Calendar.DAY_OF_MONTH, 2) withId 1)().isSuccess shouldBe true
+            (Future({ now }) validates now.add(Calendar.DAY_OF_MONTH, -2) withId 1)().isFailure shouldBe true
+            (Future({ now }) validates now withId 1)().isFailure shouldBe true
+        }
+
+        it("should apply future or present rule date") {
+            (FutureOrPresent({ now }) validates now.add(Calendar.DAY_OF_MONTH, 2) withId 1)().isSuccess shouldBe true
+            (FutureOrPresent({ now }) validates now.add(Calendar.DAY_OF_MONTH, -2) withId 1)().isFailure shouldBe true
+            (FutureOrPresent({ now }) validates now withId 1)().isSuccess shouldBe true
         }
     }
 })
