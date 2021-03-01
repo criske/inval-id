@@ -13,14 +13,13 @@ val passwordRule = Validation<String> {
    errorOnFail("Password must have length of at least 8") { input.length < 8 } 
 }
 
-fun signUp(username: String, password: String): Result<Unit> {
+fun signUp(username: String, password: String): Result<Unit> =
    Input.merge(
       notBlankRule validates username withId "username",
       ComposedValidation(notBlankRule, passwordRule) validates password withId "password"
    ).flatMap {
       signUpService(username, password)
    }
-}
 fun signUpService(username: String, password: String): Result<Unit> = Result.success(Unit)
 ```
 An input can support multiple validations. Not the that order matters: `ValidationException` will be thrown at first failed rule.
