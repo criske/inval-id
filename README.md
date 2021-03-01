@@ -52,6 +52,8 @@ These rules loosely follow [javax.validation.constraints](https://javaee.github.
 - PositiveOrZero
 - Size
 
+For usage see [unit tests](https://github.com/criske/inval-id/blob/main/src/test/kotlin/pcf/crskdev/inval/id/RulesTest.kt)
+
 #### Object validation
 
 ```kotlin
