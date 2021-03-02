@@ -6,6 +6,7 @@ Simple and lightweight library for input validation written in Kotlin. Core conc
 #### Creating a validation input
 There are two ways:
 ```kotlin
+ val email = "foo@example.com"
  val input: Input<String> = Input("email".toId(), email, Rules.NotBlank(), Rules.Email())
  //or
  val input: Input<String> = ComposedValidation(Rules.NotBlank(), Rules.Email()) validates email withId "email"
