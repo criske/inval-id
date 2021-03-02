@@ -476,7 +476,7 @@ object Rules {
     /**
      *  Adapter for an object that has size/length props.
      *
-     * @param T CharSequence, Array, Collection, Map types allowed.
+     * @param T CharSequence, Array, Collection, Map and kotlin Array Primitives types allowed.
      * @param value Value.
      * @return Int Size.
      */
@@ -484,12 +484,19 @@ object Rules {
         when (value) {
             is CharSequence -> value.length
             is Array<*> -> value.size
+            is CharArray -> value.size
+            is ByteArray -> value.size
+            is ShortArray -> value.size
+            is IntArray -> value.size
+            is LongArray -> value.size
+            is FloatArray -> value.size
+            is DoubleArray -> value.size
             is Collection<*> -> value.size
             is Map<*, *> -> value.size
             else -> throw IllegalArgumentException(
                 """
                     Unsupported type ${value!!::class.java.simpleName}, allowed: 
-                    CharSequence, Array, Collection and Map
+                    CharSequence, Array, Collection, Map and Primitive Array (CharArray, IntArray etc...)
                 """.trimIndent()
             )
         }

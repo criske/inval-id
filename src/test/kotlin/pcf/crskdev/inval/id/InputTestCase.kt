@@ -80,7 +80,7 @@ internal class InputTestCase : StringSpec({
     }
 
     "should accept only ValidationException result failure construction" {
-        val rule: Validation<String> = { _, _ ->
+        val rule: Validation<String> = { _, _, _ ->
             Result.failure(RuntimeException("Some exception"))
         }
         shouldThrow<IllegalStateException> {

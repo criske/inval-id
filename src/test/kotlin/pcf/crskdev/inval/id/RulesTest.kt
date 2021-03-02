@@ -75,6 +75,13 @@ internal class RulesTest : DescribeSpec({
             (NotEmpty<Array<Any>>() validates emptyArray() withId 1)().isFailure shouldBe true
             (NotEmpty<Collection<Any>>() validates emptyList() withId 1)().isFailure shouldBe true
             (NotEmpty<Map<Any, Any>>() validates emptyMap() withId 1)().isFailure shouldBe true
+            (NotEmpty<CharArray>() validates CharArray(0) withId 1)().isFailure shouldBe true
+            (NotEmpty<IntArray>() validates IntArray(0) withId 1)().isFailure shouldBe true
+            (NotEmpty<ByteArray>() validates ByteArray(0) withId 1)().isFailure shouldBe true
+            (NotEmpty<ShortArray>() validates ShortArray(0) withId 1)().isFailure shouldBe true
+            (NotEmpty<LongArray>() validates LongArray(0) withId 1)().isFailure shouldBe true
+            (NotEmpty<FloatArray>() validates FloatArray(0) withId 1)().isFailure shouldBe true
+            (NotEmpty<DoubleArray>() validates DoubleArray(0) withId 1)().isFailure shouldBe true
         }
 
         it("should throw type is not allowed") {

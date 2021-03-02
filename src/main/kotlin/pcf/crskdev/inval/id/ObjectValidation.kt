@@ -34,7 +34,7 @@ package pcf.crskdev.inval.id
  * @receiver Applies ObjectValidationScope.
  * @return Validation.
  */
-fun <T> ObjectValidation(block: ObjectValidationScope<T>.() -> Unit): Validation<T> = { input, _ ->
+fun <T> ObjectValidation(block: ObjectValidationScope<T>.() -> Unit): Validation<T> = { input, _, _ ->
     val inputs = ObjectValidationScope(input).apply(block).inputs
     val builder = ValidationException.Builder()
     inputs.map { it() }.forEach {

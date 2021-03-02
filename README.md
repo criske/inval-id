@@ -3,7 +3,28 @@
 
 Simple and lightweight library for input validation written in Kotlin. Core concept is reusable and composable validation rules.
 
-#### Basic usasge
+#### Creating a validation input
+There are two ways:
+```kotlin
+ val input: Input<String> = Input("email".toId(), email, Rules.NotBlank(), Rules.Email())
+ //or
+ val input: Input<String> = ComposedValidation(Rules.NotBlank(), Rules.Email()) validates email withId "email"
+
+ val result: Result<String> = input()
+        .onSuccess { println("Email is valid")}
+        .onFailure { throwable -> println((throwable as ValidationException).errors)}
+```
+Bypassing validation:
+```kotlin
+val input = Input.byPass(email)
+```
+Validation is applied when invoking the input
+An input can support multiple validations. Note the that order matters: `ValidationException` will be thrown at first failed rule.
+
+Failing a validation results in a `Result.failure` that wraps a `ValidationException` which also contains a list on constraint violations in format of
+`id, message`.
+
+#### Basic example
 
 ```kotlin
 val notBlankRule = Validation<String> { input ->
@@ -14,7 +35,10 @@ val passwordRule = Validation<String> { input ->
 }
 
 fun signUp(username: String, password: String): Result<Unit> =
-   Input.merge(
+   // Input.merge() merges the inputs, applies validations and returns a Result of Pair, Triple
+   // based on the number of inputs
+   // If inputs are larger than 3, use Input.mergeAny() the result is a List of input values.
+   Input.mergeTwo(
       notBlankRule validates username withId "username",
       ComposedValidation(notBlankRule, passwordRule) validates password withId "password"
    ).flatMap {
@@ -22,10 +46,24 @@ fun signUp(username: String, password: String): Result<Unit> =
    }
 fun signUpService(username: String, password: String): Result<Unit> = Result.success(Unit)
 ```
-An input can support multiple validations. Not the that order matters: `ValidationException` will be thrown at first failed rule.
 
-Failing a validation results in a `Result.failure` that wraps a `ValidationException` which also contains a list on constraint violations in format of
-`id, message`.
+#### Adapting an input type to a rule type.
+Sometimes we might need to adapt an input type to an existing validation rule that doesn't support that type.
+
+Scenario: Have a password input as a CharArray.
+For example, in order to test its strength with inval-id Rules.Pattern, 
+we need to transform the value to a CharSequence.
+If password is being validated by multiple array rules, this will break the composition
+since Rule.Pattern only supports CharSequence as input. 
+So we need to transform that CharArray input value to a CharSequence before Rules.Pattern is applied.
+
+```kotlin
+ val adaptedRule: Validation<CharArray> =
+     Pattern { _, _ -> "Weak password: must at least 8 in length" }("^.{8,}$")
+                .adapt { CharBuffer.wrap(it) }
+ val input = ComposedValidation(NotEmpty(), adaptedRule) validates "abcd1234".toCharArray() withId 1
+ val result = input().onSuccess { println("Password is valid")}
+```
 
 #### Out-of-the-box rules offered by inval-id
 
@@ -65,15 +103,4 @@ val accountRule = ObjectValidation<Account> { account ->
       Rules.NotBlank() validates info.phone withId "phone"
    } validates account.info withId "info"
  }
-```
-
-#### Creating a validation input
-There are two ways:
-```kotlin
- val input = Input("email".toId(), email, Rules.NotBlank(), Rules.Email())
- val input = ComposedValidation(Rules.NotBlank(), Rules.Email()) validates email withId "email"
-```
-Bypassing validation:
-```kotlin
-val input = Input.byPass(email)
 ```

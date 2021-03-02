@@ -63,7 +63,7 @@ class Input<T>(
      *
      * @return Result.
      */
-    operator fun invoke(): Result<T> = ComposedValidation(*this.validations)(this.input) {
+    operator fun invoke(): Result<T> = ComposedValidation(*this.validations)(this.input, this.id) {
         ValidationException.of(this.id, it)
     }
 
