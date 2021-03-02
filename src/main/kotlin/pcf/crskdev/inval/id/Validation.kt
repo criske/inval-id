@@ -27,11 +27,11 @@
 package pcf.crskdev.inval.id
 
 /**
- * Function alias that creates a validation rule based of the input value T.
+ * Function alias that creates a validation rule based of the input value T with id.
  * It returns a [Result] with the input value on success or, on failure, a
  * [ValidationException] created with [ValidationExceptionProvider].
  */
-typealias Validation<T> = (T, ValidationExceptionProvider) -> Result<T>
+typealias Validation<T> = (T, Id, ValidationExceptionProvider) -> Result<T>
 
 /**
  * De facto way to create a [Validation] rule.
@@ -48,7 +48,7 @@ typealias Validation<T> = (T, ValidationExceptionProvider) -> Result<T>
  * @return Validation rule.
  */
 @Suppress("FunctionName")
-fun <T> Validation(block: ValidationScope<T>.(T) -> Unit): Validation<T> = { input, error ->
+fun <T> Validation(block: ValidationScope<T>.(T) -> Unit): Validation<T> = { input, _, error ->
     val scope = ValidationScope(input, error).apply { block(input) }
     if (scope.builder.isEmpty) {
         Result.success(input)
@@ -136,9 +136,9 @@ typealias CustomMessageValidation<T> = (CharSequence) -> Validation<T>
  * @param validations [Validation] rules.
  * @return Result.
  */
-fun <T> ComposedValidation(vararg validations: Validation<T>): Validation<T> = { input, error ->
+fun <T> ComposedValidation(vararg validations: Validation<T>): Validation<T> = { input, id, error ->
     validations.fold(Result.success(input)) { acc, curr ->
-        acc.flatMap { curr(input, error) }
+        acc.flatMap { curr(input, id, error) }
     }.onFailure { e ->
         if (e !is ValidationException)
             throw IllegalStateException(
