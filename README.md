@@ -39,7 +39,7 @@ fun signUp(username: String, password: String): Result<Unit> =
    // Input.merge() merges the inputs, applies validations and returns a Result of Pair, Triple
    // based on the number of inputs
    // If inputs are larger than 3, use Input.mergeAny() the result is a List of input values.
-   Input.mergeTwo(
+   Input.merge(
       notBlankRule validates username withId "username",
       ComposedValidation(notBlankRule, passwordRule) validates password withId "password"
    ).flatMap {
