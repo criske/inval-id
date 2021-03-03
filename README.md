@@ -10,58 +10,105 @@ There are two ways:
  val input: Input<String> = Input("email".toId(), email, Rules.NotBlank(), Rules.Email())
  //or
  val input: Input<String> = ComposedValidation(Rules.NotBlank(), Rules.Email()) validates email withId "email"
+```
+Note that the `Id` could be any value, and is up to user to ensure this is unique.
+This id will appear in `ValidationException` errors (constraint violations) `Result` 
+and helps to identify which input failed.
 
- val result: Result<String> = input()
-        .onSuccess { println("Email is valid")}
+#### Creating a validation rule 
+Creating a validation rule is simple. Just use `Validation<T>` builder function. 
+```kotlin
+val rule = Validation<String> { value ->
+    if(value.isBlank()){
+        error("Must not be blank")
+    }
+}
+//or
+val rule = Validation<String> {
+    errorOnFail("Must not be blank") { it.isBlank() }
+}
+val inputA = rule validates "foo" withId 1
+val inputB = rule validates "foo" withId 2
+```
+Under the hood this creates the actual validation rule a low function having the signature `(T, Id, ValidationExceptionProvider) -> Result<T>`
+(aliased as `Validation<T>`).
+
+This way will create the "illusion" of using objects, but in fact these are just functions.
+
+```kotlin
+val rule: Validation<String> = Validation<String>{}
+```
+
+The low level function can be used to create rules too, but is much easier to user the builder.
+
+#### Composing validation rules
+
+```kotlin
+val composed = ComposedValidation<String>(rule1, rule2, rule3, rule4)
+val input = composed validates "foo" withId 1
+```
+
+#### Running validation on an input
+```kotlin
+val result: Result<String> = input
+        .runValidation()
+        .onSuccess { value -> println("Email $value is valid")}
         .onFailure { throwable -> println((throwable as ValidationException).errors)}
+//or
+val result: Result<String> = input()
 ```
-Bypassing validation:
+Validation is applied when invoking the input.
+
+An input can support multiple validations. Note the that order matters: validation will stop at first failed rule. 
+
+Failing a validation will result in a `Result.failure` that wraps a `ValidationException` which also contains a list of 
+constraint violations in format of `id, message`.
+
+#### Object validation
+Validations rule can be applied to objects too:
+
 ```kotlin
-val input = Input.byPass(email)
+data class Account(val email: String, val password: String, val info: Info)
+data class Info(val phone: String, val about: String, val address: String)
+
+val accountRule = ObjectValidation<Account> { account ->
+   ComposedValidation(Rules.NotBlank(), Rules.Email()) validates account.email withId "email"
+   ObjectValidation<Info> { info ->
+      Rules.NotBlank() validates info.address withId "address"
+      Rules.NotBlank() validates info.phone withId "phone"
+   } validates account.info withId "info"
+ }
 ```
-Validation is applied when invoking the input
-An input can support multiple validations. Note the that order matters: `ValidationException` will be thrown at first failed rule.
 
-Failing a validation results in a `Result.failure` that wraps a `ValidationException` which also contains a list on constraint violations in format of
-`id, message`.
-
-#### Basic example
-
+#### Merging inputs
 ```kotlin
-val notBlankRule = Validation<String> { input ->
-   errorOnFail("Input must not be blank") { input.isBlank() } 
-}
-val passwordRule = Validation<String> { input ->
-   errorOnFail("Password must have length of at least 8") { input.length < 8 } 
-}
+val merged = inputA + inputB
+//or
+val merged = inputA.merge(inputB)
+```
+If the running validation on merged is a successful result, then input values for A and B will be wrapped in a list.
 
-fun signUp(username: String, password: String): Result<Unit> =
-   // Input.merge() merges the inputs, applies validations and returns a Result of Pair, Triple
-   // based on the number of inputs
-   // If inputs are larger than 3, use Input.mergeAny() the result is a List of input values.
-   Input.merge(
-      notBlankRule validates username withId "username",
-      ComposedValidation(notBlankRule, passwordRule) validates password withId "password"
-   ).flatMap {
-      signUpService(username, password)
-   }
-fun signUpService(username: String, password: String): Result<Unit> = Result.success(Unit)
+In the case of merged inputs, validations run for all inputs, so for example if inputA fails, the validations will
+not stop and will check the inputB too (acts like a form validation).
+
+When merging an input for which we don't want to apply a validation rule, then `Input.byPass` is used:
+```kotlin
+val merged = inputA + Input.byPass(myValue)
 ```
 
 #### Adapting an input type to a rule type.
 Sometimes we might need to adapt an input type to an existing validation rule that doesn't support that type.
 
-Scenario: Have a password input as a CharArray.
-For example, in order to test its strength with inval-id Rules.Pattern, 
-we need to transform the value to a CharSequence.
-If password is being validated by multiple array rules, this will break the composition
-since Rule.Pattern only supports CharSequence as input. 
-So we need to transform that CharArray input value to a CharSequence before Rules.Pattern is applied.
+Scenario: Have a password input as a `CharArray`.
+For example, in order to test its strength with inval-id `Rules.Pattern`, 
+we need to transform the value to a `CharSequence`.
+If password is being validated by multiple array rules, this will break the composition though,
+since `Rule.Pattern` only supports `CharSequence` as input values. 
+So we need to transform that `CharArray` input value to a `CharSequence` before `Rules.Pattern` is applied.
 
 ```kotlin
- val adaptedRule: Validation<CharArray> =
-     Pattern { _, _ -> "Weak password: must at least 8 in length" }("^.{8,}$")
-                .adapt { CharBuffer.wrap(it) }
+ val adaptedRule: Validation<CharArray> = Pattern()("^.{8,}$").adapt { CharBuffer.wrap(it) }
+
  val input = ComposedValidation(NotEmpty(), adaptedRule) validates "abcd1234".toCharArray() withId 1
  val result = input().onSuccess { println("Password is valid")}
 ```
@@ -92,16 +139,3 @@ These rules loosely follow [javax.validation.constraints](https://javaee.github.
 
 For usage see [unit tests](https://github.com/criske/inval-id/blob/main/src/test/kotlin/pcf/crskdev/inval/id/RulesTest.kt)
 
-#### Object validation
-
-```kotlin
-data class Account(val email: String, val password: String, val info: Info)
-data class Info(val phone: String, val about: String, val address: String)
-val accountRule = ObjectValidation<Account> { account ->
-   ComposedValidation(Rules.NotBlank(), Rules.Email()) validates account.email withId "email"
-   ObjectValidation<Info> { info ->
-      Rules.NotBlank() validates info.address withId "address"
-      Rules.NotBlank() validates info.phone withId "phone"
-   } validates account.info withId "info"
- }
-```
