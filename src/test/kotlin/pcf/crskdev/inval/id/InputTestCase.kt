@@ -88,68 +88,6 @@ internal class InputTestCase : StringSpec({
         }
     }
 
-    "should merge any" {
-        val rule = Validation<Int> { }
-        Input.mergeAny(
-            Input(1.toId(), 1, rule),
-            Input(2.toId(), 2, rule),
-            Input(3.toId(), 3, rule),
-            Input(4.toId(), 4, rule),
-        ).isSuccess shouldBe true
-    }
-
-    "should merge any inputs but some should be invalid" {
-        val rule = Validation<Int> { }
-        val otherRule = Validation<Int> { this.error("") }
-        Input.mergeAny(
-            Input(1.toId(), 1, rule),
-            Input(2.toId(), 2, rule),
-            Input(3.toId(), 3, rule, otherRule),
-            Input(4.toId(), 4, otherRule),
-        ).isFailure shouldBe true
-    }
-
-    "should merge two inputs" {
-        val rule = Validation<Int> { }
-        Input.merge(
-            Input(1.toId(), 1, rule),
-            Input(2.toId(), 2, rule)
-        ).isSuccess shouldBe true
-    }
-
-    "should merge two inputs but one should be invalid" {
-        val rule = Validation<Int> { }
-        val otherRule = Validation<Int> { this.error("") }
-        Input.merge(
-            Input(1.toId(), 1, rule, otherRule),
-            Input(2.toId(), 2, rule, otherRule)
-        ).isFailure shouldBe true
-    }
-
-    "should merge three inputs" {
-        val rule = Validation<Int> { }
-        Input.merge(
-            Input(1.toId(), 1, rule),
-            Input(2.toId(), 2, rule),
-            Input(3.toId(), 3, rule)
-        ).isSuccess shouldBe true
-    }
-
-    "should merge three inputs but some should be invalid" {
-        val rule = Validation<Int> { }
-        val otherRule = Validation<Int> { this.error("") }
-        val merge = Input.merge(
-            Input(1.toId(), 1, rule),
-            Input(2.toId(), 2, rule, otherRule),
-            Input(3.toId(), 3, rule, otherRule)
-        )
-
-        with(merge) {
-            this.isFailure shouldBe true
-            (this.exceptionOrNull() as ValidationException).errors.size shouldBe 2
-        }
-    }
-
     "should use regex validation" {
         var email = RegexValidation("^(.+)@(.+)$")("Not a valid email.")
         Input(0.toId(), "foo", email)().isFailure shouldBe true

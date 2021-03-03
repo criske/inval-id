@@ -56,14 +56,9 @@ class Input<T>(
     val id: Id,
     val input: T,
     internal vararg val validations: Validation<T>
-) {
+) : InputSource<T> {
 
-    /**
-     * Applies validation rules to the input value.
-     *
-     * @return Result.
-     */
-    operator fun invoke(): Result<T> = ComposedValidation(*this.validations)(this.input, this.id) {
+    override fun runValidations(): Result<T> = ComposedValidation(*this.validations)(this.input, this.id) {
         ValidationException.of(this.id, it)
     }
 
@@ -78,75 +73,5 @@ class Input<T>(
          * @return Result.success
          */
         fun <T> byPass(input: T): Input<T> = Input(Id.None.Instance, input)
-
-        /**
-         * Merges multiple [Input]s and validates all into one Result.
-         *
-         * Using this method is discouraged since is not type safe. One of the
-         * [Input.merge] overloads should be used when possible.
-         *
-         * @param inputs Inputs.
-         * @return Result.
-         */
-        fun mergeAny(vararg inputs: Input<*>): Result<List<Any>> {
-            val results: MutableList<Any> = mutableListOf()
-            val builder = ValidationException.Builder()
-            for (i in 0..inputs.lastIndex) {
-                inputs[i]()
-                    .onSuccess { results.add(it!!) }
-                    .onFailure { builder.add(it as ValidationException) }
-            }
-            return builder.buildToResult { results }
-        }
-
-        /**
-         * Merges two [Input]s and validates all into one Result.
-         *
-         * @param T
-         * @param R
-         * @param inputOne
-         * @param inputTwo
-         * @return Result
-         */
-        fun <T, R> merge(inputOne: Input<T>, inputTwo: Input<R>): Result<Pair<T, R>> {
-            val builder = ValidationException.Builder()
-
-            val resultOne = inputOne().onFailure {
-                builder.add(it as ValidationException)
-            }
-            val resultTwo = inputTwo().onFailure {
-                builder.add(it as ValidationException)
-            }
-
-            return builder.buildToResult {
-                Pair(resultOne.getOrNull()!!, resultTwo.getOrNull()!!)
-            }
-        }
-
-        /**
-         * Merges three [Input]s and validates all into one Result.
-         *
-         * @param T
-         * @param R
-         * @param P
-         * @param inputOne
-         * @param inputTwo
-         * @param inputThree
-         * @return Result.
-         */
-        fun <T, R, P> merge(inputOne: Input<T>, inputTwo: Input<R>, inputThree: Input<P>): Result<Triple<T, R, P>> {
-            val builder = ValidationException.Builder()
-
-            val resultMergeTwo = merge(inputOne, inputTwo).onFailure {
-                builder.add(it as ValidationException)
-            }
-            val resultThree = inputThree().onFailure {
-                builder.add(it as ValidationException)
-            }
-            return builder.buildToResult {
-                val mergeTwo = resultMergeTwo.getOrNull()!!
-                Triple(mergeTwo.first, mergeTwo.second, resultThree.getOrNull()!!)
-            }
-        }
     }
 }
