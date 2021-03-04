@@ -122,6 +122,12 @@ These rules loosely follow [javax.validation.constraints](https://javaee.github.
 - AssertFalse
 - Email
 - Digits
+  - DigitsInt
+  - DigitsStr
+  - Fractions
+  - FractionsStr
+  - Integers
+  - IntegersStr
 - Future
 - FutureOrPresent
 - NotBlank
