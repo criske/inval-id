@@ -38,8 +38,13 @@ import pcf.crskdev.inval.id.Rules.Digits
 import pcf.crskdev.inval.id.Rules.DigitsInt
 import pcf.crskdev.inval.id.Rules.DigitsStr
 import pcf.crskdev.inval.id.Rules.Email
+import pcf.crskdev.inval.id.Rules.Fractions
+import pcf.crskdev.inval.id.Rules.FractionsStr
 import pcf.crskdev.inval.id.Rules.Future
 import pcf.crskdev.inval.id.Rules.FutureOrPresent
+import pcf.crskdev.inval.id.Rules.IGNORE
+import pcf.crskdev.inval.id.Rules.Integers
+import pcf.crskdev.inval.id.Rules.IntegersStr
 import pcf.crskdev.inval.id.Rules.Max
 import pcf.crskdev.inval.id.Rules.Min
 import pcf.crskdev.inval.id.Rules.MinMax
@@ -209,6 +214,25 @@ internal class RulesTest : DescribeSpec({
         }
         it("should apply to string numbers") {
             (DigitsStr()(3, 2) validates "120.20" withId 1)().isSuccess shouldBe true
+            (IntegersStr()(3) validates "120.25345350" withId 1)().isSuccess shouldBe true
+            (FractionsStr()(3) validates "120534543.200" withId 1)().isSuccess shouldBe true
+        }
+        it("should ignore digits part") {
+            (Digits()(IGNORE, 3) validates 43242353.233 withId 1)().isSuccess shouldBe true
+            (Digits()(IGNORE, 3) validates 43242353.23 withId 1)().isFailure shouldBe true
+            (Fractions()(3) validates 43242353.233 withId 1)().isSuccess shouldBe true
+            (Fractions()(3) validates 43242353.23 withId 1)().isFailure shouldBe true
+        }
+        it("should ignore fractions part") {
+            (Digits()(3, IGNORE) validates 432.23342342 withId 1)().isSuccess shouldBe true
+            (Digits()(3, IGNORE) validates 43.2332324 withId 1)().isFailure shouldBe true
+            (Integers()(3) validates 432.23342342 withId 1)().isSuccess shouldBe true
+            (Integers()(3) validates 43.2332324 withId 1)().isFailure shouldBe true
+        }
+        it("should throw if both parts are ignored") {
+            shouldThrow<IllegalArgumentException> {
+                (Digits()(IGNORE, IGNORE) validates 43.2332324 withId 1)()
+            }
         }
     }
 
