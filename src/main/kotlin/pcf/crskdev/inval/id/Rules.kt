@@ -91,28 +91,27 @@ object Rules {
      * The value of the field or property must be a [Number] value lower than or equal
      * to the [Number] in the value element.
      *
-     * Returns _(T) -> Validation<T>_ lambda, where T param is the maximum boundary [Number] against which
+     * Returns _(Number) -> Validation<Number>_ lambda, where argument is the max number against which
      * input will be tested.
      *
      * Example:
      *
-     * _Max<Float>(scale = 2.places())(10.12f) validates 10.118654f withId 1_
+     * _Max(scale = 2.places())(10.12f) validates 10.118654f withId 1_
      * (succeeds because input _10.118654f_ is rounded up to _10.12f_, the max allowed)
      *
-     * _Max<Int>()(10) validates 19 withId 1_ (fails because min is _10_ and input is _19_)
+     * _Max()(10) validates 19 withId 1_ (fails because min is _10_ and input is _19_)
      *
-     * @param T [Number] type.
      * @param messageProvider Custom message lambda. Takes the input and max as args.
      * @param scale [MathContext] approximation scale applicable for floats and doubles inputs decimal places.
      * otherwise for integers will be ignored.
      * @return (T) -> Validation<T>.
      */
-    fun <T : Number> Max(
+    fun Max(
         scale: MathContext = MathContext.UNLIMITED,
-        messageProvider: (T, T) -> String = { input, max -> "Input $input must be at most $max." }
-    ): (T) -> Validation<T> = { max ->
+        messageProvider: (Number, Number) -> String = { input, max -> "Input $input must be at most $max." }
+    ): (Number) -> Validation<Number> = { max ->
         Validation { input ->
-            val predicate: (T) -> Boolean = {
+            val predicate: (Number) -> Boolean = {
                 input
                     .toBigDecimalInternal()
                     .setScale(scale.precision, scale.roundingMode) > max.toBigDecimalInternal()
@@ -124,29 +123,28 @@ object Rules {
 
     /**
      * The value of the field or property must be a [Number] value larger than or equal
-     * to the [Number] in the value element.         *
-     * Returns _(T) -> Validation<T>_ lambda, where T param is the minimum boundary [Number] against which
+     * to the [Number] in the value element.
+     * Returns _(Number) -> Validation<Number>_ lambda, where arg is the minimum number against which
      * input will be tested.
      *
      * Example:
      *
-     * _Min<Float>(scale = 2.places())(10.12f) validates 10.118654f withId 1_
+     * _Min(scale = 2.places())(10.12f) validates 10.118654f withId 1_
      * (succeeds because input _10.118654f_ is rounded up to _10.12f_, the min allowed)
      *
-     * _Min<Int>()(10) validates 9 withId 1_ (fails because min is _10_ and input is _9_)
+     * _Min()(10) validates 9 withId 1_ (fails because min is _10_ and input is _9_)
      *
-     * @param T [Number] type.
      * @param messageProvider Custom message lambda. Takes the input and min as args.
      * @param scale [MathContext] approximation scale applicable for floats and doubles inputs decimal places,
      * otherwise for integers will be ignored.
-     * @return (T) -> Validation<T>.
+     * @return (Number) -> Validation<Number>.
      */
-    fun <T : Number> Min(
+    fun Min(
         scale: MathContext = MathContext.UNLIMITED,
-        messageProvider: (T, T) -> String = { input, min -> "Input $input must be at least $min." }
-    ): (T) -> Validation<T> = { min ->
+        messageProvider: (Number, Number) -> String = { input, min -> "Input $input must be at least $min." }
+    ): (Number) -> Validation<Number> = { min ->
         Validation { input ->
-            val predicate: (T) -> Boolean = {
+            val predicate: (Number) -> Boolean = {
                 input
                     .toBigDecimalInternal()
                     .setScale(scale.precision, scale.roundingMode) < min.toBigDecimalInternal()
@@ -159,18 +157,17 @@ object Rules {
     /**
      * Interval Rule, that uses internally [Min] and [Max] rules.
      *
-     * @param T [Number] type.
      * @param messageProvider Message on fail. Lambda take Input, Min and Max values as args.
      * @param scale Decimal places scaling. See [Min] and [Max]
-     * @return Lambda that takes [Min] Number and [Max] Number as params and returns a Validation.
+     * @return Lambda that takes [Min] Number and [Max] Number as params and returns a Validation<Number>.
      */
-    fun <T : Number> MinMax(
+    fun MinMax(
         scale: MathContext = MathContext.UNLIMITED,
-        messageProvider: (T, T, T) -> String = { input, min, max -> "$input must be between [$min, $max]" }
-    ): (T, T) -> Validation<T> = { min, max ->
+        messageProvider: (Number, Number, Number) -> String = { input, min, max -> "$input must be between [$min, $max]" }
+    ): (Number, Number) -> Validation<Number> = { min, max ->
         ComposedValidation(
-            Min<T>(scale) { input, _ -> messageProvider(input, min, max) }(min),
-            Max<T>(scale) { input, _ -> messageProvider(input, min, max) }(max)
+            Min(scale) { input, _ -> messageProvider(input, min, max) }(min),
+            Max(scale) { input, _ -> messageProvider(input, min, max) }(max)
         )
     }
 
@@ -181,20 +178,19 @@ object Rules {
      *
      * Example:
      *
-     * _Digits<Double>()(3, 2) validates 120,32 withId 1_ passes
+     * _Digits()(3, 2) validates 120.32 withId 1_ passes
      *
-     * _Digits<Double>()(3, 2) validates 12,32 withId 1_ fails
+     * _Digits()(3, 2) validates 12.32 withId 1_ fails
      *
      * See also : [DigitsInt], [DigitsStr]
      *
-     * @param T Number Type.
      * @param messageProvider Message provider on fail.
      * @receiver Takes Input, Digits and Fractions as args and returns the message.
-     * @return `(Int, Int) -> Validation` that takes Digits and Fractions as args.
+     * @return `(Int, Int) -> Validation<Number>` that takes Digits and Fractions as args.
      */
-    fun <T : Number> Digits(
-        messageProvider: (T, Int, Int) -> String = { input, integers, fractions -> "$input number must have $integers digits and $fractions fractions" }
-    ): (Int, Int) -> Validation<T> = { integers, fractions ->
+    fun Digits(
+        messageProvider: (Number, Int, Int) -> String = { input, integers, fractions -> "$input number must have $integers digits and $fractions fractions" }
+    ): (Int, Int) -> Validation<Number> = { integers, fractions ->
         Validation { input ->
             errorOnFail(messageProvider(input, integers, fractions)) {
                 val inputBd = input.toBigDecimalInternal()
@@ -230,12 +226,8 @@ object Rules {
     fun DigitsStr(
         messageProvider: (String, Int, Int) -> String = { input, integers, fractions -> "$input number must have $integers digits and $fractions fractions" }
     ): (Int, Int) -> Validation<String> = { integers, fractions ->
-        Validation { input ->
-            errorOnFail(messageProvider(input, integers, fractions)) {
-                val inputBd = BigDecimal(input)
-                abs(inputBd.precision() - inputBd.scale()) != integers || inputBd.scale() != fractions
-            }
-        }
+        Digits { input, _, _ -> messageProvider(input.toString(), integers, fractions) }(integers, fractions)
+            .adapt { BigDecimal(it) }
     }
 
     /**
@@ -257,7 +249,7 @@ object Rules {
     fun DigitsInt(
         messageProvider: (Int, Int) -> String = { input, integers -> "$input number must have $integers digits" }
     ): (Int) -> Validation<Int> = { integers ->
-        Digits<Int> { input, _, _ -> messageProvider(input, integers) }(integers, 0)
+        Digits { input, _, _ -> messageProvider(input.toInt(), integers) }(integers, 0).adapt { it }
     }
 
     /**
@@ -504,10 +496,9 @@ object Rules {
     /**
      * Number to big decimal.
      *
-     * @param T Number type.
      * @return BigDecimal.
      */
-    private fun <T : Number> T.toBigDecimalInternal(): BigDecimal = when (this) {
+    private fun Number.toBigDecimalInternal(): BigDecimal = when (this) {
         is Float -> this.toBigDecimal()
         is Double -> this.toBigDecimal()
         is BigDecimal -> this

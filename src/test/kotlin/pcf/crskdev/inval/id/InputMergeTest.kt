@@ -58,7 +58,7 @@ internal class InputMergeTest : StringSpec({
 
     "should fail validation on merged inputs" {
         val inputA = Rules.NotEmpty<String>() validates "" withId 1
-        val inputB = Rules.Min<Int>()(2) validates 1 withId 2
+        val inputB = Rules.Min()(2) validates 1 withId 2
         val inputC = ruleStr validates "b" withId 3
         val merged = inputA + inputB + inputC
         val result = merged.runValidations()

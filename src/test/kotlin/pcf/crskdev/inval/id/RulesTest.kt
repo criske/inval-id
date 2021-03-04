@@ -101,37 +101,37 @@ internal class RulesTest : DescribeSpec({
     describe("Min Tests") {
 
         it("should apply approximation to floats and doubles") {
-            (Min<Float>(scale = 2.places())(10.12f) validates 10.118654f withId 1)().isSuccess shouldBe true
-            (Min<Double>()(10.0) validates 9.99999999 withId 1)().isSuccess shouldBe true
+            (Min(scale = 2.places())(10.12f) validates 10.118654f withId 1)().isSuccess shouldBe true
+            (Min()(10.0) validates 9.99999999 withId 1)().isSuccess shouldBe true
         }
 
         it("should apply to integer numbers") {
-            (Min<Int>()(10) validates 9 withId 1)().isFailure shouldBe true
-            (Min<Int>()(9) validates 9 withId 1)().isSuccess shouldBe true
+            (Min()(10) validates 9 withId 1)().isFailure shouldBe true
+            (Min()(9) validates 9 withId 1)().isSuccess shouldBe true
 
-            (Min<Long>()(10L) validates 9L withId 1)().isFailure shouldBe true
-            (Min<Long>()(9L) validates 9L withId 1)().isSuccess shouldBe true
+            (Min()(10L) validates 9L withId 1)().isFailure shouldBe true
+            (Min()(9L) validates 9L withId 1)().isSuccess shouldBe true
 
-            (Min<Short>()(10) validates 9 withId 1)().isFailure shouldBe true
-            (Min<Short>()(9) validates 9 withId 1)().isSuccess shouldBe true
+            (Min()(10.toShort()) validates 9.toShort() withId 1)().isFailure shouldBe true
+            (Min()(9.toShort()) validates 9.toShort() withId 1)().isSuccess shouldBe true
 
-            (Min<Byte>()(10) validates 9 withId 1)().isFailure shouldBe true
-            (Min<Byte>()(9) validates 9 withId 1)().isSuccess shouldBe true
+            (Min()(10.toByte()) validates 9.toByte() withId 1)().isFailure shouldBe true
+            (Min()(9.toByte()) validates 9.toByte() withId 1)().isSuccess shouldBe true
         }
 
         it("should apply to BigDecimal/BigInteger") {
-            (Min<BigInteger>()(BigInteger.TEN) validates BigInteger.valueOf(9) withId 1)().isFailure shouldBe true
-            (Min<BigDecimal>()(BigDecimal.valueOf(1.0)) validates BigDecimal.valueOf(0.0) withId 1)().isFailure shouldBe true
+            (Min()(BigInteger.TEN) validates BigInteger.valueOf(9) withId 1)().isFailure shouldBe true
+            (Min()(BigDecimal.valueOf(1.0)) validates BigDecimal.valueOf(0.0) withId 1)().isFailure shouldBe true
         }
 
         it("should throw if Number type is not supported") {
             shouldThrow<IllegalArgumentException> {
-                (Min<Number>()(mockk()) validates mockk() withId 1)()
+                (Min()(mockk()) validates mockk() withId 1)()
             }
         }
 
         it("should have custom message on fail") {
-            val fail = (Min<Int> { input, min -> "Input $input must be min $min" }(10) validates 9 withId 1)()
+            val fail = (Min { input, min -> "Input $input must be min $min" }(10) validates 9 withId 1)()
                 .exceptionOrNull()!! as ValidationException
             fail.errors.first().message shouldBe "Input 9 must be min 10"
         }
@@ -140,37 +140,37 @@ internal class RulesTest : DescribeSpec({
     describe("Max Tests") {
 
         it("should apply approximation to floats and doubles") {
-            (Max<Float>(scale = 2.places())(10.12f) validates 10.118654f withId 1)().isSuccess shouldBe true
-            (Max<Double>()(10.0) validates 9.99999999 withId 1)().isSuccess shouldBe true
+            (Max(scale = 2.places())(10.12f) validates 10.118654f withId 1)().isSuccess shouldBe true
+            (Max()(10.0) validates 9.99999999 withId 1)().isSuccess shouldBe true
         }
 
         it("should apply to integer numbers") {
-            (Max<Int>()(10) validates 19 withId 1)().isFailure shouldBe true
-            (Max<Int>()(9) validates 9 withId 1)().isSuccess shouldBe true
+            (Max()(10) validates 19 withId 1)().isFailure shouldBe true
+            (Max()(9) validates 9 withId 1)().isSuccess shouldBe true
 
-            (Max<Long>()(10L) validates 19L withId 1)().isFailure shouldBe true
-            (Max<Long>()(9L) validates 9L withId 1)().isSuccess shouldBe true
+            (Max()(10L) validates 19L withId 1)().isFailure shouldBe true
+            (Max()(9L) validates 9L withId 1)().isSuccess shouldBe true
 
-            (Max<Short>()(10) validates 19 withId 1)().isFailure shouldBe true
-            (Max<Short>()(9) validates 9 withId 1)().isSuccess shouldBe true
+            (Max()(10.toShort()) validates 19.toShort() withId 1)().isFailure shouldBe true
+            (Max()(9.toShort()) validates 9.toShort() withId 1)().isSuccess shouldBe true
 
-            (Max<Byte>()(10) validates 19 withId 1)().isFailure shouldBe true
-            (Max<Byte>()(9) validates 9 withId 1)().isSuccess shouldBe true
+            (Max()(10.toByte()) validates 19.toByte() withId 1)().isFailure shouldBe true
+            (Max()(9.toByte()) validates 9.toByte() withId 1)().isSuccess shouldBe true
         }
 
         it("should apply to BigDecimal/BigInteger") {
-            (Max<BigInteger>()(BigInteger.TEN) validates BigInteger.valueOf(19) withId 1)().isFailure shouldBe true
-            (Max<BigDecimal>()(BigDecimal.valueOf(0.0)) validates BigDecimal.valueOf(1.0) withId 1)().isFailure shouldBe true
+            (Max()(BigInteger.TEN) validates BigInteger.valueOf(19) withId 1)().isFailure shouldBe true
+            (Max()(BigDecimal.valueOf(0.0)) validates BigDecimal.valueOf(1.0) withId 1)().isFailure shouldBe true
         }
 
         it("should throw if Number type is not supported") {
             shouldThrow<IllegalArgumentException> {
-                (Max<Number>()(mockk()) validates mockk() withId 1)()
+                (Max()(mockk()) validates mockk() withId 1)()
             }
         }
 
         it("should have custom message on fail") {
-            val fail = (Max<Int> { input, max -> "Input $input must be max $max" }(10) validates 19 withId 1)()
+            val fail = (Max { input, max -> "Input $input must be max $max" }(10) validates 19 withId 1)()
                 .exceptionOrNull()!! as ValidationException
             fail.errors.first().message shouldBe "Input 19 must be max 10"
         }
@@ -178,7 +178,7 @@ internal class RulesTest : DescribeSpec({
 
     describe("Min Max tests") {
         it("should apply min max") {
-            val minMax = MinMax<Int>()(10, 20)
+            val minMax = MinMax()(10, 20)
             (minMax validates 15 withId 1)().isSuccess shouldBe true
             (minMax validates 10 withId 1)().isSuccess shouldBe true
             (minMax validates 20 withId 1)().isSuccess shouldBe true
@@ -188,7 +188,7 @@ internal class RulesTest : DescribeSpec({
         }
 
         it("should have custom message") {
-            val minMax = MinMax<Int> { input, min, max -> "Bad input value $input. Must be between $min and $max" }
+            val minMax = MinMax { input, min, max -> "Bad input value $input. Must be between $min and $max" }
             val fail = (minMax(10, 20) validates 25 withId 1)().exceptionOrNull()!! as ValidationException
             fail.errors.first().message shouldBe "Bad input value 25. Must be between 10 and 20"
         }
@@ -196,16 +196,16 @@ internal class RulesTest : DescribeSpec({
 
     describe("Digits tests") {
         it("should apply to int") {
-            (Digits<Int>()(3, 0) validates 10 withId 1)().isFailure shouldBe true
-            (Digits<Int>()(3, 0) validates 100 withId 1)().isSuccess shouldBe true
+            (Digits()(3, 0) validates 10 withId 1)().isFailure shouldBe true
+            (Digits()(3, 0) validates 100 withId 1)().isSuccess shouldBe true
             (DigitsInt()(3) validates 120 withId 1)().isSuccess shouldBe true
             (DigitsInt()(3) validates 12 withId 1)().isFailure shouldBe true
         }
         it("should apply to floats/doubles") {
-            (Digits<Double>()(3, 2) validates 103.22 withId 1)().isSuccess shouldBe true
-            (Digits<Float>()(3, 2) validates 10.202f withId 1)().isFailure shouldBe true
-            (Digits<Float>()(3, 2) validates 100.22f withId 1)().isSuccess shouldBe true
-            (Digits<Float>()(1, 5) validates 1.12345f withId 1)().isSuccess shouldBe true
+            (Digits()(3, 2) validates 103.22 withId 1)().isSuccess shouldBe true
+            (Digits()(3, 2) validates 10.202f withId 1)().isFailure shouldBe true
+            (Digits()(3, 2) validates 100.22f withId 1)().isSuccess shouldBe true
+            (Digits()(1, 5) validates 1.12345f withId 1)().isSuccess shouldBe true
         }
         it("should apply to string numbers") {
             (DigitsStr()(3, 2) validates "120.20" withId 1)().isSuccess shouldBe true
