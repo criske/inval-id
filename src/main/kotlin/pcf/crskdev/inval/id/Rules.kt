@@ -30,6 +30,7 @@ import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.MathContext
 import java.math.RoundingMode
+import java.nio.charset.CodingErrorAction.IGNORE
 import java.util.Date
 import kotlin.math.abs
 
@@ -186,15 +187,20 @@ object Rules {
      *
      * @param messageProvider Message provider on fail.
      * @receiver Takes Input, Digits and Fractions as args and returns the message.
-     * @return `(Int, Int) -> Validation<Number>` that takes Digits and Fractions as args.
+     * @return `(Int, Int) -> Validation<Number>` that takes Digits and Fractions as args. One of them,
+     *  but not both, could be ignored by using [IGNORE] value flag.
      */
     fun Digits(
         messageProvider: (Number, Int, Int) -> String = { input, integers, fractions -> "$input number must have $integers digits and $fractions fractions" }
     ): (Int, Int) -> Validation<Number> = { integers, fractions ->
+        if (integers == IGNORE && fractions == IGNORE) {
+            throw IllegalArgumentException("Can't ignore both Integers and Fractions.")
+        }
         Validation { input ->
             errorOnFail(messageProvider(input, integers, fractions)) {
                 val inputBd = input.toBigDecimalInternal()
-                abs(inputBd.precision() - inputBd.scale()) != integers || inputBd.scale() != fractions
+                (integers != IGNORE && abs(inputBd.precision() - inputBd.scale()) != integers) ||
+                    (fractions != IGNORE && inputBd.scale() != fractions)
             }
         }
     }
@@ -244,12 +250,64 @@ object Rules {
      *
      * @param messageProvider Message provider on fail.
      * @receiver Takes Input and Digits as args and returns the message.
-     * @return `(Int -> Validation` that takes Digits as arg.
+     * @return `(Int) -> Validation` that takes Digits as arg.
      */
     fun DigitsInt(
         messageProvider: (Int, Int) -> String = { input, integers -> "$input number must have $integers digits" }
     ): (Int) -> Validation<Int> = { integers ->
         Digits { input, _, _ -> messageProvider(input.toInt(), integers) }(integers, 0).adapt { it }
+    }
+
+    /**
+     * Specialized [Digits] Rule that ignores the "fractions" part.
+     *
+     * @param messageProvider Message provider on fail.
+     * @receiver Takes Input and Digits as args and returns the message.
+     * @return `(Int) -> Validation` that takes Digits as arg.
+     */
+    fun Integers(
+        messageProvider: (Number, Int) -> String = { input, integers -> "$input number must have $integers integers" }
+    ): (Int) -> Validation<Number> = { integers ->
+        Digits { input, _, _ -> messageProvider(input, integers) }(integers, IGNORE)
+    }
+
+    /**
+     * Specialized [DigitsStr] Rule that ignores the "fractions" part.
+     *
+     * @param messageProvider Message provider on fail.
+     * @receiver Takes Input and Digits as args and returns the message.
+     * @return `(String) -> Validation` that takes Digits as arg.
+     */
+    fun IntegersStr(
+        messageProvider: (String, Int) -> String = { input, integers -> "$input number must have $integers integers" }
+    ): (Int) -> Validation<String> = { integers ->
+        Integers { input, _ -> messageProvider(input.toString(), integers) }(integers).adapt { BigDecimal(it) }
+    }
+
+    /**
+     * Specialized [Digits] Rule that ignores the "integers" part.
+     *
+     * @param messageProvider Message provider on fail.
+     * @receiver Takes Input and Fractions as args and returns the message.
+     * @return `(Int) -> Validation` that takes Fractions as arg.
+     */
+    fun Fractions(
+        messageProvider: (Number, Int) -> String = { input, integers -> "$input number must have $integers fractions" }
+    ): (Int) -> Validation<Number> = { fractions ->
+        Digits { input, _, _ -> messageProvider(input, fractions) }(IGNORE, fractions)
+    }
+
+    /**
+     * Specialized [DigitsStr] Rule that ignores the "integers" part.
+     *
+     * @param messageProvider Message provider on fail.
+     * @receiver Takes Input and Fractions as args and returns the message.
+     * @return `(String) -> Validation` that takes Fractions as arg.
+     */
+    fun FractionsStr(
+        messageProvider: (String, Int) -> String = { input, integers -> "$input number must have $integers fractions" }
+    ): (Int) -> Validation<String> = { fractions ->
+        Fractions { input, _ -> messageProvider(input.toString(), fractions) }(fractions).adapt { BigDecimal(it) }
     }
 
     /**
@@ -519,4 +577,10 @@ object Rules {
      * @property roundingMode [RoundingMode]
      */
     data class Scale(val value: Int = 0, val roundingMode: RoundingMode = RoundingMode.HALF_UP)
+
+    /**
+     * Value used by Digits and the specialized Digits to
+     * ignore the integer or the fraction part
+     */
+    const val IGNORE = Int.MAX_VALUE
 }

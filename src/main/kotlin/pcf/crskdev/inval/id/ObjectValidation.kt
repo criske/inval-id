@@ -49,7 +49,6 @@ fun <T> ObjectValidation(block: ObjectValidationScope<T>.(T) -> Unit): Validatio
  * Object validation scope.
  *
  * @param T Input type.
- * @property input Input value.
  * @constructor Create empty Object validation scope.
  */
 class ObjectValidationScope<T> internal constructor() {
