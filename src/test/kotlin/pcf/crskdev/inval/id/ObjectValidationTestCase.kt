@@ -40,12 +40,12 @@ class ObjectValidationTestCase : StringSpec({
         }
         val emailRule = RegexValidation("^(.+)@(.+)$")("Not a valid email.")
 
-        val input = ObjectValidation<Account> {
-            ComposedValidation(empty, emailRule) validates input.email withId "email"
-            ObjectValidation<Info> {
-                empty validates input.address withId "address"
-                empty validates input.phone withId "phone".toId()
-            } validates input.info withId "info"
+        val input = ObjectValidation<Account> { acc ->
+            ComposedValidation(empty, emailRule) validates acc.email withId "email"
+            ObjectValidation<Info> { info ->
+                empty validates info.address withId "address"
+                empty validates info.phone withId "phone".toId()
+            } validates acc.info withId "info"
         } validates account withId "account"
 
         input.validations.size shouldBe 1
