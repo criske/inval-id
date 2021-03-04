@@ -34,20 +34,20 @@ internal class ValidationExceptionTest : StringSpec({
             .add(1.toId(), "error#1")
             .add(1.toId(), "error#2")
             .build()
-        exception.errors shouldBe listOf(
-            ValidationException.Field(1.toId(), "error#1"),
-            ValidationException.Field(1.toId(), "error#2")
+        exception.violations shouldBe listOf(
+            ValidationException.ConstraintViolation(1.toId(), "error#1"),
+            ValidationException.ConstraintViolation(1.toId(), "error#2")
         )
         exception.toString() shouldBe listOf(
-            ValidationException.Field(1.toId(), "error#1"),
-            ValidationException.Field(1.toId(), "error#2")
+            ValidationException.ConstraintViolation(1.toId(), "error#1"),
+            ValidationException.ConstraintViolation(1.toId(), "error#2")
         ).joinToString("\n")
     }
 
     "should create simple exception" {
         val exception = ValidationException.of(1.toId(), "error")
-        exception.errors shouldBe listOf(
-            ValidationException.Field(1.toId(), "error")
+        exception.violations shouldBe listOf(
+            ValidationException.ConstraintViolation(1.toId(), "error")
         )
     }
 

@@ -63,7 +63,7 @@ internal class InputMergeTest : StringSpec({
         val merged = inputA + inputB + inputC
         val result = merged.runValidations()
         result.isFailure shouldBe true
-        with((result.exceptionOrNull() as ValidationException).errors) {
+        with((result.exceptionOrNull() as ValidationException).violations) {
             size shouldBe 2
             first().id shouldBe 1.toId()
             this[1].id shouldBe 2.toId()

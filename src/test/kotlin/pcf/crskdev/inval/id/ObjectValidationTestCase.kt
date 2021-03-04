@@ -54,10 +54,10 @@ class ObjectValidationTestCase : StringSpec({
             input().getOrThrow()
         }
 
-        failure.errors shouldBe listOf(
-            ValidationException.Field("email".toId(), "Not a valid email."),
-            ValidationException.Field("address".toId(), "Field Required"),
-            ValidationException.Field("phone".toId(), "Field Required")
+        failure.violations shouldBe listOf(
+            ValidationException.ConstraintViolation("email".toId(), "Not a valid email."),
+            ValidationException.ConstraintViolation("address".toId(), "Field Required"),
+            ValidationException.ConstraintViolation("phone".toId(), "Field Required")
         )
     }
 })

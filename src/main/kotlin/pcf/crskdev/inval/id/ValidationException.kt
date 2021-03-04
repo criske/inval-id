@@ -27,30 +27,32 @@ package pcf.crskdev.inval.id
 /**
  * Validation exception.
  *
+ * @property violations Constraint violations
  * @author Cristian Pela
  * @since 1.0
  */
-class ValidationException internal constructor(val errors: List<Field>) : RuntimeException() {
+class ValidationException internal constructor(val violations: List<ConstraintViolation>) : RuntimeException() {
 
     /**
-     * Field that carries the validation error.
+     * Data that carries the input validation error.
+     *
+     * Input is represented the id assigned by user.
      *
      * @property id [Id]
      * @property message CharSequence
-     * @constructor Create empty Field
      */
-    data class Field internal constructor(val id: Id, val message: CharSequence)
+    data class ConstraintViolation internal constructor(val id: Id, val message: CharSequence)
 
     companion object {
         /**
-         * Creates a ValidationException with a single [Field] error.
+         * Creates a ValidationException with a single [ConstraintViolation] error.
          *
          * @param id [Id]
          * @param message CharSequence
          * @return ValidationException
          */
         internal fun of(id: Id, message: CharSequence): ValidationException = ValidationException(
-            listOf(Field(id, message))
+            listOf(ConstraintViolation(id, message))
         )
     }
 
@@ -62,47 +64,47 @@ class ValidationException internal constructor(val errors: List<Field>) : Runtim
     internal class Builder {
 
         /**
-         * Current field that failed to be valid.
+         * Constraint violations.
          */
-        private val errors = mutableListOf<Field>()
+        private val violations = mutableListOf<ConstraintViolation>()
 
         /**
-         * A a field error based on id and message.
+         * Add a new [ConstraintViolation] based on id and message.
          *
          * @param id Id
          * @param message Message.
          * @return Build
          */
         fun add(id: Id, message: CharSequence): Builder {
-            errors.add(Field(id, message))
+            this.violations.add(ConstraintViolation(id, message))
             return this
         }
 
         /**
-         * Adds [ValidationException.errors] to the builder errors.
+         * Adds [ValidationException.violations] to the builder errors.
          *
          * @param validationException ValidationException
          * @return Build
          */
         fun add(validationException: ValidationException): Builder {
-            errors.addAll(validationException.errors)
+            this.violations.addAll(validationException.violations)
             return this
         }
 
         /**
-         * Checks if error fields is empty.
+         * Checks if there are no constrain violations.
          */
-        val isEmpty: Boolean get() = errors.isEmpty()
+        val isEmpty: Boolean get() = this.violations.isEmpty()
 
         /**
          * Builds a new ValidationException
          * @return ValidationException
          */
-        fun build(): ValidationException = ValidationException(errors)
+        fun build(): ValidationException = ValidationException(violations)
     }
 
     override fun toString(): String {
-        return errors.joinToString("\n")
+        return this.violations.joinToString("\n")
     }
 }
 

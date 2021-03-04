@@ -75,7 +75,7 @@ internal class InputTestCase : StringSpec({
         with(Input("id".toId(), "foo", rule)()) {
             this.isFailure shouldBe true
             (this.exceptionOrNull() as ValidationException)
-                .errors[0] shouldBe ValidationException.Field("id".toId(), "foo failed")
+                .violations[0] shouldBe ValidationException.ConstraintViolation("id".toId(), "foo failed")
         }
     }
 
@@ -111,7 +111,7 @@ internal class InputTestCase : StringSpec({
         val exception = Input(0.toId(), "foo", customMessage("Custom invalid message"))()
             .exceptionOrNull()!! as ValidationException
         exception
-            .errors
+            .violations
             .first()
             .message shouldBe "Custom invalid message"
     }
@@ -123,7 +123,7 @@ internal class InputTestCase : StringSpec({
         val exception = Input(0.toId(), "", rule)()
             .exceptionOrNull()!! as ValidationException
         exception
-            .errors
+            .violations
             .first()
             .message shouldBe "Is empty"
     }
