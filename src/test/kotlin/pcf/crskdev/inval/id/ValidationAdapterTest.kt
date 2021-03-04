@@ -41,7 +41,7 @@ internal class ValidationAdapterTest : StringSpec({
         (ComposedValidation(NotEmpty(), adaptedRule) validates "abcd1234".toCharArray() withId 1)().isSuccess shouldBe true
         val result = (ComposedValidation(NotEmpty(), adaptedRule) validates "abcd1".toCharArray() withId 1)()
         result.isFailure shouldBe true
-        with((result.exceptionOrNull()!! as ValidationException).errors.first()) {
+        with((result.exceptionOrNull()!! as ValidationException).violations.first()) {
             message shouldBe "Weak password: must at least 8 in length"
             id shouldBe 1.toId()
         }

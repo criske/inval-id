@@ -9,7 +9,7 @@ There are two ways:
  val email = "foo@example.com"
  val input: Input<String> = Input("email".toId(), email, Rules.NotBlank(), Rules.Email())
  //or
- val input: Input<String> = ComposedValidation(Rules.NotBlank(), Rules.Email()) validates email withId "email"
+ val input = ComposedValidation(Rules.NotBlank(), Rules.Email()) validates email withId "email"
 ```
 Note that the `Id` could be any value, and is up to user to ensure this is unique.
 This id will appear in `ValidationException` errors (constraint violations) `Result` 
@@ -30,7 +30,7 @@ val rule = Validation<String> {
 val inputA = rule validates "foo" withId 1
 val inputB = rule validates "foo" withId 2
 ```
-Under the hood this creates the actual validation rule a low function having the signature `(T, Id, ValidationExceptionProvider) -> Result<T>`
+Under the hood this creates the actual validation rule a low level function having the signature `(T, Id, ValidationExceptionProvider) -> Result<T>`
 (aliased as `Validation<T>`).
 
 This way will create the "illusion" of using objects, but in fact these are just functions.
@@ -39,7 +39,7 @@ This way will create the "illusion" of using objects, but in fact these are just
 val rule: Validation<String> = Validation<String>{}
 ```
 
-The low level function can be used to create rules too, but is much easier to user the builder.
+The low level function can be used to create rules too, but the builder is more convenient.
 
 #### Composing validation rules
 
@@ -53,7 +53,7 @@ val input = composed validates "foo" withId 1
 val result: Result<String> = input
         .runValidation()
         .onSuccess { value -> println("Email $value is valid")}
-        .onFailure { throwable -> println((throwable as ValidationException).errors)}
+        .onFailure { throwable -> println((throwable as ValidationException).violations)}
 //or
 val result: Result<String> = input()
 ```
@@ -61,8 +61,9 @@ Validation is applied when invoking the input.
 
 An input can support multiple validations. Note the that order matters: validation will stop at first failed rule. 
 
-Failing a validation will result in a `Result.failure` that wraps a `ValidationException` which also contains a list of 
-constraint violations in format of `id, message`.
+Failing a validation will result in a `Result.failure` that wraps a `ValidationException`. This contains a list of 
+constraint violations in format of `id, message`. Most of the time this list has the violation of
+the first failed rule. Multiple violations can be found only in the case of [merging inputs](#merging-inputs) validations.
 
 #### Object validation
 Validations rule can be applied to objects too:

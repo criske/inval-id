@@ -133,7 +133,7 @@ internal class RulesTest : DescribeSpec({
         it("should have custom message on fail") {
             val fail = (Min { input, min -> "Input $input must be min $min" }(10) validates 9 withId 1)()
                 .exceptionOrNull()!! as ValidationException
-            fail.errors.first().message shouldBe "Input 9 must be min 10"
+            fail.violations.first().message shouldBe "Input 9 must be min 10"
         }
     }
 
@@ -172,7 +172,7 @@ internal class RulesTest : DescribeSpec({
         it("should have custom message on fail") {
             val fail = (Max { input, max -> "Input $input must be max $max" }(10) validates 19 withId 1)()
                 .exceptionOrNull()!! as ValidationException
-            fail.errors.first().message shouldBe "Input 19 must be max 10"
+            fail.violations.first().message shouldBe "Input 19 must be max 10"
         }
     }
 
@@ -190,7 +190,7 @@ internal class RulesTest : DescribeSpec({
         it("should have custom message") {
             val minMax = MinMax { input, min, max -> "Bad input value $input. Must be between $min and $max" }
             val fail = (minMax(10, 20) validates 25 withId 1)().exceptionOrNull()!! as ValidationException
-            fail.errors.first().message shouldBe "Bad input value 25. Must be between 10 and 20"
+            fail.violations.first().message shouldBe "Bad input value 25. Must be between 10 and 20"
         }
     }
 
