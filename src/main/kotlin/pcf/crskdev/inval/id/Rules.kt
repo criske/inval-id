@@ -226,12 +226,8 @@ object Rules {
     fun DigitsStr(
         messageProvider: (String, Int, Int) -> String = { input, integers, fractions -> "$input number must have $integers digits and $fractions fractions" }
     ): (Int, Int) -> Validation<String> = { integers, fractions ->
-        Validation { input ->
-            errorOnFail(messageProvider(input, integers, fractions)) {
-                val inputBd = BigDecimal(input)
-                abs(inputBd.precision() - inputBd.scale()) != integers || inputBd.scale() != fractions
-            }
-        }
+        Digits { input, _, _ -> messageProvider(input.toString(), integers, fractions) }(integers, fractions)
+            .adapt { BigDecimal(it) }
     }
 
     /**
