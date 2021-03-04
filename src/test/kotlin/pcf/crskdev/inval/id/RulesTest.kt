@@ -52,7 +52,7 @@ import pcf.crskdev.inval.id.Rules.PastOrPresent
 import pcf.crskdev.inval.id.Rules.Positive
 import pcf.crskdev.inval.id.Rules.PositiveOrZero
 import pcf.crskdev.inval.id.Rules.Size
-import pcf.crskdev.inval.id.Rules.places
+import pcf.crskdev.inval.id.Rules.scale
 
 internal class RulesTest : DescribeSpec({
 
@@ -101,7 +101,7 @@ internal class RulesTest : DescribeSpec({
     describe("Min Tests") {
 
         it("should apply approximation to floats and doubles") {
-            (Min(scale = 2.places())(10.12f) validates 10.118654f withId 1)().isSuccess shouldBe true
+            (Min(scale = 2.scale())(10.12f) validates 10.118654f withId 1)().isSuccess shouldBe true
             (Min()(10.0) validates 9.99999999 withId 1)().isSuccess shouldBe true
         }
 
@@ -140,7 +140,7 @@ internal class RulesTest : DescribeSpec({
     describe("Max Tests") {
 
         it("should apply approximation to floats and doubles") {
-            (Max(scale = 2.places())(10.12f) validates 10.118654f withId 1)().isSuccess shouldBe true
+            (Max(scale = 2.scale())(10.12f) validates 10.118654f withId 1)().isSuccess shouldBe true
             (Max()(10.0) validates 9.99999999 withId 1)().isSuccess shouldBe true
         }
 

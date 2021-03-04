@@ -96,26 +96,26 @@ object Rules {
      *
      * Example:
      *
-     * _Max(scale = 2.places())(10.12f) validates 10.118654f withId 1_
+     * _Max(scale = 2.scale())(10.12f) validates 10.118654f withId 1_
      * (succeeds because input _10.118654f_ is rounded up to _10.12f_, the max allowed)
      *
      * _Max()(10) validates 19 withId 1_ (fails because min is _10_ and input is _19_)
      *
      * @param messageProvider Custom message lambda. Takes the input and max as args.
-     * @param scale [MathContext] approximation scale applicable for floats and doubles inputs decimal places.
+     * @param scale [Scale] approximation scale applicable for floats and doubles inputs decimal scale.
      * otherwise for integers will be ignored.
      * @return (T) -> Validation<T>.
      */
     fun Max(
-        scale: MathContext = MathContext.UNLIMITED,
+        scale: Scale = Scale(),
         messageProvider: (Number, Number) -> String = { input, max -> "Input $input must be at most $max." }
     ): (Number) -> Validation<Number> = { max ->
         Validation { input ->
             val predicate: (Number) -> Boolean = {
                 input
                     .toBigDecimalInternal()
-                    .setScale(scale.precision, scale.roundingMode) > max.toBigDecimalInternal()
-                    .setScale(scale.precision, scale.roundingMode)
+                    .setScale(scale.value, scale.roundingMode) > max.toBigDecimalInternal()
+                    .setScale(scale.value, scale.roundingMode)
             }
             errorOnFail(messageProvider(input, max), predicate)
         }
@@ -129,26 +129,26 @@ object Rules {
      *
      * Example:
      *
-     * _Min(scale = 2.places())(10.12f) validates 10.118654f withId 1_
+     * _Min(scale = 2.scale())(10.12f) validates 10.118654f withId 1_
      * (succeeds because input _10.118654f_ is rounded up to _10.12f_, the min allowed)
      *
      * _Min()(10) validates 9 withId 1_ (fails because min is _10_ and input is _9_)
      *
      * @param messageProvider Custom message lambda. Takes the input and min as args.
-     * @param scale [MathContext] approximation scale applicable for floats and doubles inputs decimal places,
+     * @param scale [MathContext] approximation scale applicable for floats and doubles inputs decimal scale,
      * otherwise for integers will be ignored.
      * @return (Number) -> Validation<Number>.
      */
     fun Min(
-        scale: MathContext = MathContext.UNLIMITED,
+        scale: Scale = Scale(),
         messageProvider: (Number, Number) -> String = { input, min -> "Input $input must be at least $min." }
     ): (Number) -> Validation<Number> = { min ->
         Validation { input ->
             val predicate: (Number) -> Boolean = {
                 input
                     .toBigDecimalInternal()
-                    .setScale(scale.precision, scale.roundingMode) < min.toBigDecimalInternal()
-                    .setScale(scale.precision, scale.roundingMode)
+                    .setScale(scale.value, scale.roundingMode) < min.toBigDecimalInternal()
+                    .setScale(scale.value, scale.roundingMode)
             }
             errorOnFail(messageProvider(input, min), predicate)
         }
@@ -158,11 +158,11 @@ object Rules {
      * Interval Rule, that uses internally [Min] and [Max] rules.
      *
      * @param messageProvider Message on fail. Lambda take Input, Min and Max values as args.
-     * @param scale Decimal places scaling. See [Min] and [Max]
+     * @param scale Decimal scale scaling. See [Min] and [Max]
      * @return Lambda that takes [Min] Number and [Max] Number as params and returns a Validation<Number>.
      */
     fun MinMax(
-        scale: MathContext = MathContext.UNLIMITED,
+        scale: Scale = Scale(),
         messageProvider: (Number, Number, Number) -> String = { input, min, max -> "$input must be between [$min, $max]" }
     ): (Number, Number) -> Validation<Number> = { min, max ->
         ComposedValidation(
@@ -251,20 +251,6 @@ object Rules {
     ): (Int) -> Validation<Int> = { integers ->
         Digits { input, _, _ -> messageProvider(input.toInt(), integers) }(integers, 0).adapt { it }
     }
-
-    /**
-     * Handy extension to create a [MathContext] used by [Min] and [Max] for decimal scaling when dealing with
-     * fraction inputs.
-     *
-     * Receiver is the number of decimal places after scaling will kick in.
-     *
-     * Example:
-     *
-     * "3.places(RoundingMode.HALF_EVEN)"
-     *
-     * @param roundingMode [RoundingMode] strategy.
-     */
-    fun Int.places(roundingMode: RoundingMode = RoundingMode.HALF_UP) = MathContext(this, roundingMode)
 
     /**
      * The size of the field or property is evaluated and must match the specified boundaries.
@@ -465,6 +451,8 @@ object Rules {
         errorOnFail(messageProvider(input, now)) { input.before(now) }
     }
 
+    // ============================= HELPERS & UTILS =============================
+
     /**
      *  Adapter for an object that has size/length props.
      *
@@ -509,4 +497,26 @@ object Rules {
         is Byte -> this.toInt().toBigDecimal()
         else -> throw IllegalArgumentException("Unsupported type ${this::class.java.simpleName}")
     }
+
+    /**
+     * Handy extension to create a [MathContext] used by [Min] and [Max] for decimal scaling when dealing with
+     * fraction inputs.
+     *
+     * Receiver is the number of decimal scale after scaling will kick in.
+     *
+     * Example:
+     *
+     * "3.scale(RoundingMode.HALF_EVEN)"
+     *
+     * @param roundingMode [RoundingMode] strategy.
+     */
+    fun Int.scale(roundingMode: RoundingMode = RoundingMode.HALF_UP) = Scale(this, roundingMode)
+
+    /**
+     * Scale info needed by Min and Max rules
+     *
+     * @property value Value.
+     * @property roundingMode [RoundingMode]
+     */
+    data class Scale(val value: Int = 0, val roundingMode: RoundingMode = RoundingMode.HALF_UP)
 }
