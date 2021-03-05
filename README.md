@@ -7,12 +7,9 @@ Simple and lightweight library for input validation written in Kotlin. Core conc
 #### Install
 ```gradle
 repositories {
-		...
   maven { url 'https://jitpack.io' }
 }
-...
 dependencies {
-  ...
   implementation 'com.github.criske:inval-id:1.0'
 }
 ```
