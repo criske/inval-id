@@ -18,6 +18,10 @@ configurations {
     ktlint
 }
 
+java {
+    withSourcesJar()
+}
+
 test {
     useJUnitPlatform()
     testLogging {
