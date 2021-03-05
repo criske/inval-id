@@ -1,7 +1,22 @@
+[![Release](https://jitpack.io/v/criske/inval-id.svg)]
 [![codecov](https://codecov.io/gh/criske/inval-id/branch/main/graph/badge.svg?token=YFSEQZ2LQ2)](https://codecov.io/gh/criske/inval-id)
 # inval-id
 
 Simple and lightweight library for input validation written in Kotlin. Core concept is reusable and composable validation rules.
+
+#### Install
+```gradle
+repositories {
+		...
+  maven { url 'https://jitpack.io' }
+}
+...
+dependencies {
+  ...
+  implementation 'com.github.criske:inval-id:1.0'
+}
+```
+
 
 #### Creating a validation input
 There are two ways:
