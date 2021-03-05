@@ -1,4 +1,4 @@
-[![Release](https://jitpack.io/v/criske/inval-id.svg)]
+![Release](https://jitpack.io/v/criske/inval-id.svg)
 [![codecov](https://codecov.io/gh/criske/inval-id/branch/main/graph/badge.svg?token=YFSEQZ2LQ2)](https://codecov.io/gh/criske/inval-id)
 # inval-id
 
